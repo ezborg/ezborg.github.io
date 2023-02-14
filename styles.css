@@ -1,0 +1,46 @@
+table {
+    border: 1px solid;
+    border-collapse: collapse;
+}
+
+th, td{
+    border: 1px solid;
+    text-align: center;
+}
+
+thead {
+    font-weight: bold;
+}
+
+.large-table{
+    width: 100%;
+}
+
+header {
+    position: relative;
+    text-align: center;
+    color: #cc4a40;
+}
+
+h1 {
+    color: #3d85c6;
+}
+
+h2 {
+    color: #cc4a40;
+}
+
+body {
+    background-color: #eae3e7;
+    font-size: 20px;
+}
+
+footer {
+    position: fixed;
+    left: 0px;
+    bottom: 0px;
+    width: 100%;
+    background-color: grey;
+    text-align: center;
+    color: black;
+}
