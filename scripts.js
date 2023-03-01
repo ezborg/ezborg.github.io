@@ -11,8 +11,34 @@ function loadLeaderboard(load) {
   Promise.allSettled(fetches)
     .then((results) => {
 
-      var timeNow = new Date();
+      let infoTitle = document.getElementById('myTable').getElementsByTagName('thead')[0];
+      let titleRow = infoTitle.insertRow();
+      let cellt1 = titleRow.insertCell(0);
+      let cellt2 = titleRow.insertCell(1);
+      let cellt3 = titleRow.insertCell(2);
+      let cellt4 = titleRow.insertCell(3);
+      let cellt5 = titleRow.insertCell(4);
+      let cellt6 = titleRow.insertCell(5);
+      let cellt7 = titleRow.insertCell(6);
+      let cellt8 = titleRow.insertCell(7);
+      let cellt9 = titleRow.insertCell(8);
+      let cellt10 = titleRow.insertCell(9);
+      let cellt11 = titleRow.insertCell(10);
+      cellt1.innerHTML="Track Name";
+      cellt2.innerHTML="Category";
+      cellt3.innerHTML="Time";
+      cellt4.innerHTML="Player Name";
+      cellt5.innerHTML="Mii";
+      cellt6.innerHTML="Nation";
+      cellt7.innerHTML="Character";
+      cellt8.innerHTML="Vehicle";
+      cellt9.innerHTML="Controller";
+      cellt10.innerHTML="Date";
+      cellt11.innerHTML="Duration";
       let myTable = document.getElementById("myTable").getElementsByTagName('tbody')[0];
+      //create header row and init body row
+
+      var timeNow = new Date();
       let category = 'Normal';
       let playerTally = [['Unknown',0,"images/unknown.png"]];
       let countryTally = [['Un',0,"images/unknown.png"]];
@@ -97,8 +123,6 @@ function loadLeaderboard(load) {
         let cell10 = row.insertCell(9);
         let cell11 = row.insertCell(10);
         //One row and 11 columns for each track and category
-        //Order is:
-        //Track Name,Category,Time,Player Name,Mii Name,Nation Flag,Character,Vehicle,Controller,Date Set,Record Duration
 
         if (results[index]["status"] === "fulfilled") {
           let player = getPlayerIDAndRegion(results[index]["value"]["ghosts"]["0"]["playerId"]);
@@ -120,6 +144,12 @@ function loadLeaderboard(load) {
         
           let newCharacter=addToArray(currentCharacter,characterTally);
           if (newCharacter==="New") {characterTally.push([currentCharacter,1])}
+
+          if (currentController==="Gamecube") {
+            if (results[index]["value"]["ghosts"]["0"]["usbGcnAdapterAttached"]) {
+              currentController="USB-GCN"; //intercept USB-GCN before addToArray
+            }
+          }
 
           let newController=addToArray(currentController,controllerTally);
           if (newController==="New") {controllerTally.push([currentController,1])}
@@ -187,6 +217,7 @@ function createImage(pictureName) {
 }
 
 function addToArray(input,dataset) {
+  //increments array unless value isn't present and returns New/Not to determine if to push in main
   for (let k=0;k<dataset.length;k++) {
     if (input===dataset[k][0]) {
       dataset[k][1]+=1;
@@ -198,6 +229,18 @@ function addToArray(input,dataset) {
 
 function displayTopTen(dataset) {
   //top 10 longest standing records
+  let infoTitle = document.getElementById('longList').getElementsByTagName('thead')[0];
+  let titleRow = infoTitle.insertRow();
+  let cellt1 = titleRow.insertCell(0);
+  let cellt2 = titleRow.insertCell(1);
+  let cellt3 = titleRow.insertCell(2);
+  let cellt4 = titleRow.insertCell(3);
+  let cellt5 = titleRow.insertCell(4);
+  cellt1.innerHTML="Rank";
+  cellt2.innerHTML="Duration";
+  cellt3.innerHTML="Track Name: Category";
+  cellt4.innerHTML="Date";
+  cellt5.innerHTML="Record Holder";
   let infoList = document.getElementById('longList').getElementsByTagName('tbody')[0];
   for (let q=0;q<10;q++) {
     //array is typically longer than 10
@@ -337,11 +380,12 @@ function getController(x) {
       case 1: return "Nunchuk";
       case 2: return "Classic";
       case 3: return "Gamecube";
-      //ignoring USB-GCN currently
+      default: return "Unknown";
 }}
 
 function getVehicle(x) {
   switch (x) {
+      //karts 1-17,bikes 18-35
       case 0: return "Standard Kart S";
       case 1: return "Standard Kart M";
       case 2: return "Standard Kart L";
@@ -378,10 +422,12 @@ function getVehicle(x) {
       case 33: return "Jet Bubble";
       case 34: return "Dolphin Dasher";
       case 35: return "Phantom";
+      default: return "Unknown";
 }}
 
 function getCharacter(x) {
   switch (x) {
+      //the first half is seemingly random
       case 0: return "Mario";
       case 1: return "Baby Peach";
       case 2: return "Waluigi";
@@ -430,13 +476,14 @@ function getCharacter(x) {
       case 45: return "Peach Biker Outfit";
       case 46: return "Daisy Biker Outfit";
       case 47: return "Rosalina Biker Outfit";
+      default: return "Unknown";
       //don't think 42-47 are possible
 }}
 
 function getPlayerIDAndRegion(x) {
   //all current record holders and some former record holders
   //add another case for new player record or combine cases for new playerID
-  //players often use a fake name or region when setting records
+  //players often use hard to recognize mii names or incorrect regions when setting records
   switch (x) {
     case '39B00EEE8050C7F5': return ["Doge","images/US.png"];
     case '51152E6C037842FB': return ["Lawrence","images/US.png"];

@@ -6,17 +6,15 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="keywords" content="Sardine,MKW,BKT,Nintendo,Stats,200cc">
         <meta name="author" content="Sardine">
-        <meta name="description" content="All current CTGP records: Tracks/Times/Dates">
+        <meta name="description" content="All current Nin200 records">
         <link href="styles.css" rel="stylesheet" type="text/css">
-        <title>CTGP Records and Statistics</title>
+        <title>Nintendo 200 Records and Statistics</title>
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
         <script src="scripts.js"></script>
     </head>
-    
     <body onload="loadLeaderboard('https://tt.chadsoft.co.uk/original-track-leaderboards-200cc.json')">
-    
         <header>
-            <h1>All Current 200cc Nintendo Records</h1>
+            <h1> All Current 200cc Nintendo Records </h1>
             <hr>
             <nav>
                 <a href="index.html">Home</a> -------
@@ -26,7 +24,7 @@
             </nav>
             <hr>
         </header>
-        <p id="mainText">Page should load in about a minute. Glitches and shortcuts which are slower than normal have been ignored on the leaderboard. 
+        <p id="mainText"> Page should load in less than 30 seconds. Glitches and shortcuts which are slower than normal have been ignored on the leaderboard. 
             Some leaderboards may have unintential shortcuts but are still classified as normal.
             Normal categories and No-glitch categories are essentially the same. No-glitch just informs that there is another glitch category on that track.
             Stats are tracked below main records table. <br> Stats included are: <br>
@@ -38,70 +36,49 @@
             <a href="#controllerList">Controller Record Totals</a>
         </p>
         <table id="myTable" class="large-table">
-            <thead>
-                <tr>
-                    <th>Track Name</th>
-                    <th>Category</th>
-                    <th>Time</th>
-                    <th>Player Name</th>
-                    <th>Mii</th>
-                    <th>Nation</th>
-                    <th>Character</th>
-                    <th>Vehicle</th>
-                    <th>Controller</th>
-                    <th>Date Set</th>
-                    <th>Duration</th>
-                </tr>
-            </thead>
-            <tbody> 
-            </tbody>
-        </table>
-        <a href="#mainText">Top</a><br>
-        <h1>Statistics</h1>
-        <p>
-            Stats are sorted by quantity first and then alphabetically.
-        </p>
-        <h2> Top 10 Longest Standing Records </h2>
-        <table id="longList" class="large-table">
-            <thead>
-                <tr>
-                    <th>Rank</th>
-                    <th>Duration</th>
-                    <th>Track Name</th>
-                    <th>Date</th>
-                    <th>Record Holder</th>
-                </tr>
-            </thead>
+            <thead></thead>
             <tbody></tbody>
         </table>
+        <a href="#mainText"> Top </a><br>
+
+        <h1>Statistics</h1>
+        <p> Stats are sorted by quantity first and then alphabetically. </p>
+
+        <h2> Top 10 Longest Standing Records </h2>
+        <table id="longList" class="large-table">
+            <thead></thead>
+            <tbody></tbody>
+        </table>
+
         <h2> Player Total Stats </h2>
         <table id="playerList" class="skinny-table">
             <thead></thead>
             <tbody></tbody>
         </table>
+
         <h2> Country Total Stats </h2>
         <table id="countryList" class="skinny-table">
             <thead></thead>
             <tbody></tbody>
         </table>
+
         <h2> Vehicle Total Stats </h2>
         <table id="vehicleList" class="skinny-table">
             <thead></thead>
             <tbody></tbody>
         </table>
+
         <h2> Character Total Stats </h2>
         <table id="characterList" class="skinny-table">
             <thead></thead>
             <tbody></tbody>
         </table>
+
         <h2> Controller Total Stats </h2>
-        <p>
-            USB-GCN is bundled together with normal Gamecube controller.
-        </p>
         <table id="controllerList" class="skinny-table">
             <thead></thead>
             <tbody></tbody>
         </table>
-        <a href="#mainText">Top</a>
+        <a href="#mainText"> Top </a>
     </body>
 </html>
