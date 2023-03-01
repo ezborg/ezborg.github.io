@@ -1,7 +1,5 @@
 function loadLeaderboard(load) {
-  //https://tt.chadsoft.co.uk/original-track-leaderboards-200cc.json
-  const mainURL = 'https://tt.chadsoft.co.uk';
-  //must use https://
+  const mainURL = 'https://tt.chadsoft.co.uk'; //must use https://
   fetch(load).then(mainRes => {mainRes.json().then(mainLB =>{this.mainLB = mainLB;
 
   const urlList = [mainURL+this.mainLB["leaderboards"]["0"]["_links"]["item"]["href"]+'?limit=1'];
@@ -21,37 +19,67 @@ function loadLeaderboard(load) {
       let vehicleTally = [['Unknown',0]];
       let characterTally = [['Unknown',0]];
       let controllerTally = [['Unknown',0]];
-      let orderedDuration = [[0,"Unknown","Unknown","Unknown"]]
-      //init statements
+      let orderedDuration = [[0,"Unknown","Unknown","Unknown"]];
+      //arrays with a default value for html tables
+      let noShortcutCategoriyIDs = [2,6];
+      let shortcutCategories = ["GCN DK Mountain","Incendia Castle"];
+      let slowCategories = ["N64 Bowser's Castle","Mushroom Gorge","GCN Mario Circuit","Toad's Factory","DS Desert Hills"];
+      //arrays for determining categories
 
       for (let j=0;j<mainLB["leaderboards"].length;j++) {
 
-        let index = `${j}`; //previous=`${j-1}`//next=`${j+1}`//
+        let index = `${j}`; //previous=`${j-1}`, doubleprevious=`${j-2}`, next=`${j+1}`, doublenext=`${j+2}`
         let recordTime = mainLB["leaderboards"][index]["fastestTimeSimple"]; 
         let recordDate = mainLB["leaderboards"][index]["fastestTimeLastChange"];
 
         if (j>1) {
-          //can't if j=0, previous index throws an error
-          //need more edge cases for 200cc Nintendo tracks
+          //if statement that determines categories
+          //must use try/catch with categoryId, not always present
           if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-1}`]["name"]) {
+            //if current name = previous name
+
             category = 'Glitch';
-            if (isSlowGlitch(recordTime,mainLB["leaderboards"][`${j-1}`]["fastestTimeSimple"])) {
-              //should never display, used to remove from leaderboard
-              category = "Slower-Glitch";}
-            if (mainLB["leaderboards"][index]["name"]==="Six King Labyrinth" || mainLB["leaderboards"][index]["name"]==="Incendia Castle") {
-              //if other shortcut categories are made add logic here
-              category = "No-Shortcut";}
-          } else if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j+1}`]["name"]) {
-            //if next name is the same, then must be No-glitch category
-            category = 'No-Glitch';
-            if (isSlowGlitch(mainLB["leaderboards"][`${j+1}`]["fastestTimeSimple"],recordTime)) {
-              //if slow glitch is removed, no-glitch category becomes normal
-              category = "Normal";
+            if (isSlowGlitch(recordTime,mainLB["leaderboards"][`${j-1}`]["fastestTimeSimple"])) {category = "Slower-Glitch";}
+
+            try {
+              if (noShortcutCategoriyIDs.includes(mainLB["leaderboards"][index]["categoryId"])) {
+                category = "No-Shortcut";
+              }
             }
-          if (mainLB["leaderboards"][index]["name"]==="Six King Labyrinth" || mainLB["leaderboards"][index]["name"]==="Incendia Castle") {
-            //if other shortcut categories are made add logic here
-            category = "Shortcut";}
-          } else {category = 'Normal';}
+            catch(err) {console.log("Error handled: categoryId not present");}
+
+            if (slowCategories.includes(mainLB["leaderboards"][index]["name"],2)) {category = "Normal";}
+        
+            if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-2}`]["name"]) {
+              if (slowCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Normal";}
+            }
+          } 
+          
+          else if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j+1}`]["name"]) {
+            //if current name = next name
+
+            category = 'No-Glitch';
+            if (isSlowGlitch(mainLB["leaderboards"][`${j+1}`]["fastestTimeSimple"],recordTime)) {category = "Normal";}
+
+            if (j<mainLB["leaderboards"].length-2) {
+              if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j+2}`]["name"] || 
+                shortcutCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Shortcut";}
+            }
+            
+            try {
+              //used for six king and would work for 150cc Nintendo's
+              if (mainLB["leaderboards"][index]["categoryId"]===16) {
+                category = "Shortcut";
+              }
+            }
+            catch(err) {console.log("Error handled: categoryId not present");}
+
+            if (slowCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Slower-Glitch";}
+
+            if (mainLB["leaderboards"][index]["name"]==="Six King Labyrinth" && mainLB["leaderboards"][index]["200cc"]) {category = "Slower-Glitch";}
+
+          }
+          else {category = 'Normal';}
         }
 
         if (category==="Slower-Glitch") {continue;} //remove slow glitches from leaderboard
@@ -116,7 +144,7 @@ function loadLeaderboard(load) {
           cell11.innerHTML = duration;
         }
         else if (results[index]["status"] === "rejected") {
-          //display generic track info with main leaderboard if track leaderboard fails
+          //display generic track info with main leaderboard if a track leaderboard fails
           cell1.innerHTML = mainLB["leaderboards"][index]["name"];
           cell2.innerHTML = category;
           cell3.innerHTML = recordTime.slice(1);
@@ -463,7 +491,6 @@ function getPlayerIDAndRegion(x) {
     case '855843F84CCF6FEB': return ["Laty","images/US.png"];
     case 'BA141C33DD30F62B': return ["Jσikε","images/US.png"];
     case '611AF70B6321DE01': return ["Zane","images/US.png"];
-    case '6C37FC09DD67E33B': return ["Bickbork","images/US.png"];
     case '2E9390843D29256E': return ["Ivan","images/US.png"];
     case '7F1981604F0044A2': return ["Swampy","images/US.png"];
     case 'FCA8B6A3913B4B6E': return ["Dante","images/GB.png"];
@@ -515,8 +542,26 @@ function getPlayerIDAndRegion(x) {
     case 'A2AC24D447CA7BCA': return ["Sal","images/IT.png"];
     case 'B6126BA79DD1FD01': return ["Echo","images/US.png"];
     case '95E6C190EE7D9C29': return ["AlexSX","images/US.png"];
+    case '350784CA5B2A19E2': return ["Lucas","images/CA.png"];
+    case '8E1D33C70B7677B5': return ["Thunda","images/CA.png"];
+    case '4054922A89F5551F': return ["Besart","images/AL.png"];
+    case '6017D742145FCFD2': return ["Radar","images/CA.png"];
+    case 'DDE38FD0B8E94933': return ["Cow Man","images/CA.png"];
+    case '3DB7AE8FA5999056': return ["Day E","images/US.png"];
+    case '86BEBF7D493903C9': return ["PowerTower","images/US.png"];
+    case 'C1F9D44DE9E4957B': return ["Falco","images/AU.png"];
+    case 'CC37DD1F13C5ED89': return ["KingAlex","images/CA.png"];
+    case '9B376538E2E5D4AF': return ["Bryce","images/US.png"];
+    case '4053C39B13F3BD24': return ["Carter C.","images/US.png"];
+    case '1EC3384B8D39B684': return ["MasterJCP","images/US.png"];
+    case '0243BB4D89833F9D': return ["Adc","images/US.png"];
+    case 'BA3BCE569962814B': return ["BossBoy28","images/US.png"];
+    case '708BBB3EE59D227F': return ["Core","images/GB.png"];
+    case '487447841A8CB10A': return ["SpitFire","images/US.png"];
+    case '532C35DD09E2A5C8': return ["Kevin G.","images/US.png"];
     case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
+    case '6C37FC09DD67E33B': case '271EC09BB2E937BB': return ["Bickbork","images/US.png"];
     case '40B20BE4FD8CA88C': case 'AEEB0474F0DEABF8': case 'D8EEEF0F2872E83F': return ["καgυγα","images/JP.png"];
     case '2240C482ADD7E0D3': case '2CC8A5568F7A106B': case '8A1F856DCE285FEF': return ["Scorpi","images/GB.png"];
     default: return ["Unknown","images/unknown.png"];
