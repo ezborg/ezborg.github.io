@@ -9,10 +9,13 @@ table {
     margin-right:auto;
 }
 
-.skinny-table th, td {
-    width: 125px;
-    height: 25px;
+th, td {
+    padding: 4px;
     border: 1px solid;
+}
+
+li {
+    text-align: left;
 }
 
 thead {
