@@ -1,24 +1,30 @@
+* {
+    text-align: center;
+}
+
 table {
     border: 1px solid;
     border-collapse: collapse;
+    margin-left:auto;
+    margin-right:auto;
 }
 
-th, td{
+.skinny-table th, td {
+    width: 125px;
+    height: 25px;
     border: 1px solid;
-    text-align: center;
 }
 
 thead {
     font-weight: bold;
 }
 
-.large-table{
+.large-table {
     width: 100%;
 }
 
 header {
     position: relative;
-    text-align: center;
     color: #cc4a40;
 }
 
@@ -28,6 +34,7 @@ h1 {
 
 h2 {
     color: #cc4a40;
+    text-align: center;
 }
 
 body {
@@ -41,6 +48,10 @@ footer {
     bottom: 0px;
     width: 100%;
     background-color: grey;
-    text-align: center;
     color: black;
+}
+
+.grid-container {
+    display: grid;
+    grid-template-columns: auto auto auto auto;
 }
