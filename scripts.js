@@ -1,11 +1,14 @@
+const noShortcutCategoriyIDs = [2,6],
+shortcutCategories = ["GCN DK Mountain","Incendia Castle"],
+slowCategories = ["N64 Bowser's Castle","Mushroom Gorge","GCN Mario Circuit","Toad's Factory","DS Desert Hills"];
+//arrays for determining categories for edge cases
+
 function loadLeaderboard(load) {
   buildWebpage()
-  const mainURL = 'https://tt.chadsoft.co.uk'; //must use https://
   fetch(load).then(mainRes => {mainRes.json().then(mainLB =>{this.mainLB = mainLB;
-
-  const urlList = [mainURL+this.mainLB["leaderboards"]["0"]["_links"]["item"]["href"]+'?limit=1'];
-  for (let i=1;i<mainLB["leaderboards"].length;i++) {
-    urlList.push(mainURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=1');
+  let urlList = ['https://tt.chadsoft.co.uk'+this.mainLB["leaderboards"]["0"]["_links"]["item"]["href"]+'?limit=1'];
+  for (let i=1;i<mainLB["leaderboards"].length;i++) { //must use https://
+    urlList.push('https://tt.chadsoft.co.uk'+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=1');
   }
 
   let fetches = urlList.map(url => fetch(url).then(res => res.json()));
@@ -14,17 +17,17 @@ function loadLeaderboard(load) {
 
       let infoTitle = document.getElementById('myTable').getElementsByTagName('thead')[0];
       let titleRow = infoTitle.insertRow();
-      let cellt1 = titleRow.insertCell(0);
-      let cellt2 = titleRow.insertCell(1);
-      let cellt3 = titleRow.insertCell(2);
-      let cellt4 = titleRow.insertCell(3);
-      let cellt5 = titleRow.insertCell(4);
-      let cellt6 = titleRow.insertCell(5);
-      let cellt7 = titleRow.insertCell(6);
-      let cellt8 = titleRow.insertCell(7);
-      let cellt9 = titleRow.insertCell(8);
-      let cellt10 = titleRow.insertCell(9);
-      let cellt11 = titleRow.insertCell(10);
+      let cellt1 = titleRow.insertCell(0),
+      cellt2 = titleRow.insertCell(1),
+      cellt3 = titleRow.insertCell(2),
+      cellt4 = titleRow.insertCell(3),
+      cellt5 = titleRow.insertCell(4),
+      cellt6 = titleRow.insertCell(5),
+      cellt7 = titleRow.insertCell(6),
+      cellt8 = titleRow.insertCell(7),
+      cellt9 = titleRow.insertCell(8),
+      cellt10 = titleRow.insertCell(9),
+      cellt11 = titleRow.insertCell(10);
       cellt1.innerHTML="Track Name";
       cellt2.innerHTML="Category";
       cellt3.innerHTML="Time";
@@ -39,18 +42,11 @@ function loadLeaderboard(load) {
       let myTable = document.getElementById("myTable").getElementsByTagName('tbody')[0];
       //create header row and init body row
 
-      let category = 'Normal';
-      let playerTally = [['Unknown',0,"images/unknown.png"]];
-      let countryTally = [['Un',0,"images/unknown.png"]];
-      let vehicleTally = [['Unknown',0]];
-      let characterTally = [['Unknown',0]];
-      let controllerTally = [['Unknown',0]];
-      let orderedDuration = [[0,"Unknown","Unknown","Unknown"]];
-      //arrays with a default value for html tables
-      let noShortcutCategoriyIDs = [2,6];
-      let shortcutCategories = ["GCN DK Mountain","Incendia Castle"];
-      let slowCategories = ["N64 Bowser's Castle","Mushroom Gorge","GCN Mario Circuit","Toad's Factory","DS Desert Hills"];
-      //arrays for determining categories for edge cases
+      let category = 'Normal',
+      playerTally = [['Unknown',0,"images/unknown.png"]], countryTally = [['Un',0,"images/unknown.png"]],
+      vehicleTally = [['Unknown',0]], characterTally = [['Unknown',0]], controllerTally = [['Unknown',0]],
+      orderedDuration = [[0,"Unknown","Unknown","Unknown"]];
+      //declare category and arrays with a default value for html tables
 
       for (let j=0;j<mainLB["leaderboards"].length;j++) {
 
@@ -58,81 +54,32 @@ function loadLeaderboard(load) {
         let recordTime = mainLB["leaderboards"][index]["fastestTimeSimple"]; //00:00.000
         let recordDate = mainLB["leaderboards"][index]["fastestTimeLastChange"]; //UTC Time Date
 
-        if (j>1) {
-          //if statement that determines categories
-          //must use try/catch with categoryId, not always present
-          if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-1}`]["name"]) {
-            //if current name = previous name
-
-            category = 'Glitch';
-            if (isSlowGlitch(recordTime,mainLB["leaderboards"][`${j-1}`]["fastestTimeSimple"])) {category = "Slower-Glitch";}
-
-            try {
-              if (noShortcutCategoriyIDs.includes(mainLB["leaderboards"][index]["categoryId"])) {
-                category = "No-Shortcut";
-              }
-            }
-            catch(err) {console.log("Error handled: categoryId not present");}
-
-            if (slowCategories.includes(mainLB["leaderboards"][index]["name"],2)) {category = "Normal";}
-        
-            if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-2}`]["name"]) {
-              if (slowCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Normal";}
-            }
-          } 
-          
-          else if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j+1}`]["name"]) {
-            //if current name = next name
-
-            category = 'No-Glitch';
-            if (isSlowGlitch(mainLB["leaderboards"][`${j+1}`]["fastestTimeSimple"],recordTime)) {category = "Normal";}
-
-            if (j<mainLB["leaderboards"].length-2) {
-              if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j+2}`]["name"] || 
-                shortcutCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Shortcut";}
-            }
-            
-            try {
-              //used for six king and would work for 150cc Nintendo's
-              if (mainLB["leaderboards"][index]["categoryId"]===16) {
-                category = "Shortcut";
-              }
-            }
-            catch(err) {console.log("Error handled: categoryId not present");}
-
-            if (slowCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Slower-Glitch";}
-
-            if (mainLB["leaderboards"][index]["name"]==="Six King Labyrinth" && mainLB["leaderboards"][index]["200cc"]) {category = "Slower-Glitch";}
-
-          }
-          else {category = 'Normal';}
-        }
+        if (j>1) {category = determineCategory(mainLB,recordTime,index,j)}
 
         if (category==="Slower-Glitch") {continue;} //remove slow glitches from leaderboard
 
         let row = myTable.insertRow();
-        let cell1 = row.insertCell(0);
-        let cell2 = row.insertCell(1);
-        let cell3 = row.insertCell(2);
-        let cell4 = row.insertCell(3);
-        let cell5 = row.insertCell(4);
-        let cell6 = row.insertCell(5);
-        let cell7 = row.insertCell(6);
-        let cell8 = row.insertCell(7);
-        let cell9 = row.insertCell(8);
-        let cell10 = row.insertCell(9);
-        let cell11 = row.insertCell(10);
+        let cell1 = row.insertCell(0),
+        cell2 = row.insertCell(1),
+        cell3 = row.insertCell(2),
+        cell4 = row.insertCell(3),
+        cell5 = row.insertCell(4),
+        cell6 = row.insertCell(5),
+        cell7 = row.insertCell(6),
+        cell8 = row.insertCell(7),
+        cell9 = row.insertCell(8),
+        cell10 = row.insertCell(9),
+        cell11 = row.insertCell(10);
         //One row and 11 columns for each track and category
 
         if (results[index]["status"] === "fulfilled") {
-          let player = getPlayerIDAndRegion(results[index]["value"]["ghosts"]["0"]["playerId"]);
-          let currentVehicle=getVehicle(results[index]["value"]["ghosts"]["0"]["vehicleId"]);
-          let currentCharacter=getCharacter(results[index]["value"]["ghosts"]["0"]["driverId"]);
-          let currentController=getController(results[index]["value"]["ghosts"]["0"]["controller"]);
-          let duration = getRecordDuration(recordDate);
+          let player = getPlayerIDAndRegion(results[index]["value"]["ghosts"]["0"]["playerId"]),
+          currentVehicle=getVehicle(results[index]["value"]["ghosts"]["0"]["vehicleId"]),
+          currentCharacter=getCharacter(results[index]["value"]["ghosts"]["0"]["driverId"]),
+          currentController=getController(results[index]["value"]["ghosts"]["0"]["controller"]),
+          duration = getRecordDuration(recordDate);
           //getting strings from switch case statements
 
-          let toBeAdded = null;
           if (toBeAdded = addToArray(player[0],playerTally)) {playerTally.push([player[0],1,player[1]])}
           if (toBeAdded = addToArray(player[1].slice(7,9),countryTally)) {countryTally.push([player[1].slice(7,9),1,player[1]])}
           if (toBeAdded = addToArray(currentVehicle,vehicleTally)) {vehicleTally.push([currentVehicle,1])}
@@ -154,8 +101,7 @@ function loadLeaderboard(load) {
               }
             }
             catch {
-              console.log(mainLB["leaderboards"][index]["name"]+": duration is 0. Error Caught.");
-              break; //catch needed for when duration=0
+              break; //catch is reached when duration is 0 so can't be part of top 10 longest records
             }
           }
 
@@ -184,7 +130,7 @@ function loadLeaderboard(load) {
           cell9.innerHTML = "data";
           cell10.innerHTML = recordDate.slice(0,10);
           cell11.innerHTML = getRecordDuration(recordDate);
-          console.log('Failed Fetching Leaderboard at index:'+index);
+          console.log('Failed Fetching Record for: '+mainLB["leaderboards"][index]["name"]);
         }
       }
       displayTopTen(orderedDuration);
@@ -276,7 +222,7 @@ function createTable(index) {
   if (index==="1" || index==="2") {
     document.body.appendChild(createHeaderTwo(tableInfo[index]["header"]));
   }
-  tableadd = document.createElement("table");
+  let tableadd = document.createElement("table");
   tableadd.id = tableInfo[index]["id"]; 
   tableadd.className = tableInfo[index]["class"];
   tableadd.createTHead();
@@ -291,7 +237,7 @@ function createHeaderTwo(text) {
 }
 
 function createGridDiv(index) {
-  div = document.createElement("div");
+  let div = document.createElement("div");
   div.appendChild(createHeaderTwo(tableInfo[index]["header"]));
   div.appendChild(createTable(index));
   return div;
@@ -311,10 +257,7 @@ function createRedirect() {
 
 
 function getRecordDuration(recordset) { //(UTC time stamp)
-  var one_day = 1000*60*60*24;
-  var set = new Date(recordset);
-  var elapsed = Date.now() - set;
-  return Math.floor(elapsed/one_day);
+  return Math.floor( (Date.now() - new Date(recordset)) / (1000*60*60*24) ); //elapsed time divided by one day in milliseconds
 }
 
 function createImage(pictureName) {
@@ -339,11 +282,11 @@ function displayTopTen(dataset) {
   //top 10 longest standing records
   let infoTitle = document.getElementById('longList').getElementsByTagName('thead')[0];
   let titleRow = infoTitle.insertRow();
-  let cellt1 = titleRow.insertCell(0);
-  let cellt2 = titleRow.insertCell(1);
-  let cellt3 = titleRow.insertCell(2);
-  let cellt4 = titleRow.insertCell(3);
-  let cellt5 = titleRow.insertCell(4);
+  let cellt1 = titleRow.insertCell(0),
+  cellt2 = titleRow.insertCell(1),
+  cellt3 = titleRow.insertCell(2),
+  cellt4 = titleRow.insertCell(3),
+  cellt5 = titleRow.insertCell(4);
   cellt1.innerHTML="Rank";
   cellt2.innerHTML="Duration";
   cellt3.innerHTML="Track Name: Category";
@@ -352,11 +295,11 @@ function displayTopTen(dataset) {
   let infoList = document.getElementById('longList').getElementsByTagName('tbody')[0];
   for (let q=0;q<10;q++) { //this array is typically longer than 10
     let infoRow = infoList.insertRow();
-    let cell1 = infoRow.insertCell(0);
-    let cell2 = infoRow.insertCell(1);
-    let cell3 = infoRow.insertCell(2);
-    let cell4 = infoRow.insertCell(3);
-    let cell5 = infoRow.insertCell(4);
+    let cell1 = infoRow.insertCell(0),
+    cell2 = infoRow.insertCell(1),
+    cell3 = infoRow.insertCell(2),
+    cell4 = infoRow.insertCell(3),
+    cell5 = infoRow.insertCell(4);
     cell1.innerHTML=`${q+1}`;
     cell2.innerHTML=dataset[q][0];
     cell3.innerHTML=dataset[q][1];
@@ -370,8 +313,8 @@ function displaySimpleTable(tableName,dataset,title1,title2) {
   //takes table name, array of arrays ['name',total], and th titles
   let infoTitle = document.getElementById(tableName).getElementsByTagName('thead')[0];
   let titleRow = infoTitle.insertRow();
-  let cellt1 = titleRow.insertCell(0);
-  let cellt2 = titleRow.insertCell(1);
+  let cellt1 = titleRow.insertCell(0),
+  cellt2 = titleRow.insertCell(1);
   cellt1.innerHTML=title1;
   cellt2.innerHTML=title2;
   let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
@@ -381,8 +324,8 @@ function displaySimpleTable(tableName,dataset,title1,title2) {
     let playerIndex = 0;
     let nextplayerIndex = 1;
     let dataRow = infoList.insertRow();
-    let cell1 = dataRow.insertCell(0);
-    let cell2 = dataRow.insertCell(1);
+    let cell1 = dataRow.insertCell(0),
+    cell2 = dataRow.insertCell(1);
 
     for (let m=0;m<dataset.length;m++) {
       /* checks numerical first than alphabetical
@@ -408,9 +351,9 @@ function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
   //takes html table name, array of arrays ['name',total,'flag'], and th titles
   let infoTitle = document.getElementById(tableName).getElementsByTagName('thead')[0];
   let titleRow = infoTitle.insertRow();
-  let cellt1 = titleRow.insertCell(0);
-  let cellt2 = titleRow.insertCell(1);
-  let cellt3 = titleRow.insertCell(2);
+  let cellt1 = titleRow.insertCell(0),
+  cellt2 = titleRow.insertCell(1),
+  cellt3 = titleRow.insertCell(2);
   cellt1.innerHTML=title1;
   cellt2.innerHTML=title2;
   cellt3.innerHTML=title3;
@@ -421,9 +364,9 @@ function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
     let playerIndex = 0;
     let nextplayerIndex = 1;
     let dataRow = infoList.insertRow();
-    let cell1 = dataRow.insertCell(0);
-    let cell2 = dataRow.insertCell(1);
-    let cell3 = dataRow.insertCell(2);
+    let cell1 = dataRow.insertCell(0),
+    cell2 = dataRow.insertCell(1),
+    cell3 = dataRow.insertCell(2);
 
     for (let m=0;m<dataset.length;m++) {
       /* checks numerical first than alphabetical
@@ -486,6 +429,51 @@ function isSlowGlitch(current_glitch,not_glitch) { //compares two values of type
     return true;
   }
   return false;
+}
+
+function determineCategory(mainLB,recordTime,index,j) {
+  let category;
+  if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-1}`]["name"]) {//if current name = previous name
+
+    category = 'Glitch';
+    if (isSlowGlitch(recordTime,mainLB["leaderboards"][`${j-1}`]["fastestTimeSimple"])) {category = "Slower-Glitch";}
+
+    try {
+      if (noShortcutCategoriyIDs.includes(mainLB["leaderboards"][index]["categoryId"])) {
+        category = "No-Shortcut";
+      }
+    }
+    catch(err) {console.log("Error handled: categoryId not present");}
+
+    if (slowCategories.includes(mainLB["leaderboards"][index]["name"],2)) {category = "Normal";}
+
+    if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-2}`]["name"]) {
+      if (slowCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Normal";}
+    }
+  } 
+
+  else if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j+1}`]["name"]) {//if current name = next name
+
+    category = 'No-Glitch';
+    if (isSlowGlitch(mainLB["leaderboards"][`${j+1}`]["fastestTimeSimple"],recordTime)) {category = "Normal";}
+
+    if (j<mainLB["leaderboards"].length-2) {
+      if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j+2}`]["name"] || 
+        shortcutCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Shortcut";}
+    }
+
+    try {//used for six king and would work for 150cc Nintendo's
+      if (mainLB["leaderboards"][index]["categoryId"]===16) {category = "Shortcut";}
+    }
+    catch(err) {console.log("Error handled: categoryId not present");}
+
+    if (slowCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Slower-Glitch";}
+
+    if (mainLB["leaderboards"][index]["name"]==="Six King Labyrinth" && mainLB["leaderboards"][index]["200cc"]) {category = "Slower-Glitch";}
+
+  }
+  else {category = 'Normal';}
+  return category;
 }
 
 
