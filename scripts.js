@@ -56,7 +56,7 @@ function loadLeaderboard(load) {
 
         if (j>1) {category = determineCategory(mainLB,recordTime,index,j)}
 
-        if (category==="Slower-Glitch") {continue;} //remove slow glitches from leaderboard
+        if (category==="Slower-Glitch") {continue;} //prevent slow glitches from displaying on leaderboard
 
         let row = myTable.insertRow();
         let cell1 = row.insertCell(0),
@@ -153,48 +153,48 @@ function loadLeaderboard(load) {
 /*****************************************************************************/
 
 
-//json containing html table information
+//json containing html table information, maybe add table headers to array
 let tableInfo = {
-  "0":{
+  "main":{
     "id": "myTable",
     "class": "large-table",
     "header": "blank"
   },
-  "1":{
+  "top":{
     "id": "longList",
     "class": "large-table",
     "header": "Top 10 Longest Standing Records"
   },
-  "2":{
+  "player":{
     "id": "playerList",
     "class": "skinny-table",
     "header": "Player Total Stats"
   },
-  "3":{
+  "vehicle":{
     "id": "vehicleList",
     "class": "skinny-table",
     "header": "Vehicle Total Stats"
   },
-  "4":{
+  "character":{
     "id": "characterList",
     "class": "skinny-table",
     "header": "Character Total Stats"
   },
-  "5":{
+  "controller":{
     "id": "controllerList",
     "class": "skinny-table",
     "header": "Controller Total Stats"
   },
-  "6":{
+  "country":{
     "id": "countryList",
     "class": "skinny-table",
     "header": "Country Total Stats"
   }
 }
 
+/** create html elements common across all leaderboards */
 function buildWebpage() {
-  //used to create same html objects across all leaderboards
-  document.body.appendChild(createTable("0"));
+  document.body.appendChild(createTable("main"));
   let break1 = document.createElement("br");
   document.body.appendChild(break1);
   createRedirect();
@@ -206,20 +206,23 @@ function buildWebpage() {
   statBanner.appendChild(document.createTextNode("Stats are sorted by quantity first and then alphabetically."));
   document.body.appendChild(statBanner);
 
-  document.body.appendChild(createTable("1"));
-  document.body.appendChild(createTable("2"));
+  document.body.appendChild(createTable("top"));
+  document.body.appendChild(createTable("player"));
   mainDiv = document.createElement("div");
   mainDiv.className = "grid-container";
-  mainDiv.appendChild(createGridDiv("3"));
-  mainDiv.appendChild(createGridDiv("4"));
-  mainDiv.appendChild(createGridDiv("5"));
-  mainDiv.appendChild(createGridDiv("6"));
+  mainDiv.appendChild(createGridDiv("vehicle"));
+  mainDiv.appendChild(createGridDiv("character"));
+  mainDiv.appendChild(createGridDiv("controller"));
+  mainDiv.appendChild(createGridDiv("country"));
   document.body.appendChild(mainDiv);
   createRedirect();
 }
 
+/** takes a string to reference its objects in tableInfo.json
+ * @param {string} index 
+ * @returns blank table */
 function createTable(index) {
-  if (index==="1" || index==="2") {
+  if (index ==="top" || index ==="player") {
     document.body.appendChild(createHeaderTwo(tableInfo[index]["header"]));
   }
   let tableadd = document.createElement("table");
@@ -230,12 +233,10 @@ function createTable(index) {
   return tableadd;
 }
 
-function createHeaderTwo(text) {
-  let statHeader = document.createElement("h2");
-  statHeader.appendChild(document.createTextNode(text));
-  return statHeader;
-}
-
+/** takes a string to reference its objects in tableInfo.json
+ * makes a div with a header and table for grid layout
+ * @param {string} index 
+ * @returns */
 function createGridDiv(index) {
   let div = document.createElement("div");
   div.appendChild(createHeaderTwo(tableInfo[index]["header"]));
@@ -243,6 +244,24 @@ function createGridDiv(index) {
   return div;
 }
 
+/** create h2 element */
+function createHeaderTwo(text) {
+  let statHeader = document.createElement("h2");
+  statHeader.appendChild(document.createTextNode(text));
+  return statHeader;
+}
+
+/** create html image object
+ * @param {string} pictureName format="images/XX.png"
+ * @returns html image node */
+function createImage(pictureName) {
+  let image = document.createElement('img');
+  image.src = pictureName;
+  image.height = 32;
+  return image;
+}
+
+/** Creates internal link to the top of the webpage */
 function createRedirect() {
   let redirect = document.createElement("a");
   redirect.appendChild(document.createTextNode("Top of Page"));
@@ -256,30 +275,31 @@ function createRedirect() {
 /*****************************************************************************/
 
 
+/** Determine quantity of days record has stood
+ * @param {Date} recordset 
+ * @returns number, 0 or more */
 function getRecordDuration(recordset) { //(UTC time stamp)
   return Math.floor( (Date.now() - new Date(recordset)) / (1000*60*60*24) ); //elapsed time divided by one day in milliseconds
 }
 
-function createImage(pictureName) {
-  let image = document.createElement('img');
-  image.src = pictureName;
-  image.height = 32;
-  return image;
-}
-
+/** increments array element unless value isn't present and returns true/false to determine if to push in main
+ * @param {string} input 
+ * @param {Array} dataset 
+ * @returns boolean */
 function addToArray(input,dataset) {
-  //increments array element unless value isn't present and returns true/false to determine if to push in main
   for (let k=0;k<dataset.length;k++) {
     if (input===dataset[k][0]) {
       dataset[k][1]+=1;
       return false;
     }
   }
-  return 1; //true
+  return 1;
 }
 
+/** top 10 longest standing records,
+ * th are fixed, array is already sorted so function just displays first ten elements
+ * @param {Array} dataset array of arrays, this array is typically longer than 10 */
 function displayTopTen(dataset) {
-  //top 10 longest standing records
   let infoTitle = document.getElementById('longList').getElementsByTagName('thead')[0];
   let titleRow = infoTitle.insertRow();
   let cellt1 = titleRow.insertCell(0),
@@ -293,7 +313,7 @@ function displayTopTen(dataset) {
   cellt4.innerHTML="Date";
   cellt5.innerHTML="Record Holder";
   let infoList = document.getElementById('longList').getElementsByTagName('tbody')[0];
-  for (let q=0;q<10;q++) { //this array is typically longer than 10
+  for (let q=0;q<10;q++) {
     let infoRow = infoList.insertRow();
     let cell1 = infoRow.insertCell(0),
     cell2 = infoRow.insertCell(1),
@@ -308,9 +328,12 @@ function displayTopTen(dataset) {
   }
 }
 
+/** used for vehicle/character/controller tables
+ * @param {string} tableName 
+ * @param {Array} dataset array of arrays ['name',total]
+ * @param {string} title1 order matters
+ * @param {string} title2  */
 function displaySimpleTable(tableName,dataset,title1,title2) {
-  //used for vehicle/character/controller tables
-  //takes table name, array of arrays ['name',total], and th titles
   let infoTitle = document.getElementById(tableName).getElementsByTagName('thead')[0];
   let titleRow = infoTitle.insertRow();
   let cellt1 = titleRow.insertCell(0),
@@ -320,7 +343,6 @@ function displaySimpleTable(tableName,dataset,title1,title2) {
   let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
 
   for (let l=1;l<dataset.length;l++) {
-    //loops through entire array, sorts numerically and alphabetically
     let playerIndex = 0;
     let nextplayerIndex = 1;
     let dataRow = infoList.insertRow();
@@ -346,9 +368,13 @@ function displaySimpleTable(tableName,dataset,title1,title2) {
   }
 }
 
+/** used for nation and player tables, 3 elements
+ * @param {string} tableName 
+ * @param {Array} dataset array of arrays ['name',total,'flag']
+ * @param {string} title1 order matters
+ * @param {string} title2 
+ * @param {string} title3 */
 function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
-  //used for nation and player tables, 3 elements
-  //takes html table name, array of arrays ['name',total,'flag'], and th titles
   let infoTitle = document.getElementById(tableName).getElementsByTagName('thead')[0];
   let titleRow = infoTitle.insertRow();
   let cellt1 = titleRow.insertCell(0),
@@ -360,7 +386,6 @@ function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
   let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
 
   for (let l=1;l<dataset.length;l++) {
-    //loops through entire array, sorts numerically and alphabetically
     let playerIndex = 0;
     let nextplayerIndex = 1;
     let dataRow = infoList.insertRow();
@@ -388,6 +413,10 @@ function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
   }
 }
 
+/** takes two strings representing record times XX:XX.XXX
+ * @param {string} current_glitch track time being tested
+ * @param {string} not_glitch track time from no-glitch category
+ * @returns boolean */
 function isSlowGlitch(current_glitch,not_glitch) { //compares two values of type 02:22.222
   //Minutes
   if (parseInt(current_glitch.slice(1))<parseInt(not_glitch.slice(1))) {
@@ -431,6 +460,13 @@ function isSlowGlitch(current_glitch,not_glitch) { //compares two values of type
   return false;
 }
 
+/** Checks leaderboard name against surrounding names to determine a tracks category
+ * options are Normal,No-Glitch,Glitch,No-Shortcut,Shortcut,Slower-Glitch
+ * @param {json} mainLB 
+ * @param {string} recordTime used to pass to slowGlitch function
+ * @param {string} index object literal of j
+ * @param {number} j index=j
+ * @returns a string containing a tracks category */
 function determineCategory(mainLB,recordTime,index,j) {
   let category;
   if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-1}`]["name"]) {//if current name = previous name
@@ -482,6 +518,11 @@ function determineCategory(mainLB,recordTime,index,j) {
 /*****************************************************************************/
 
 
+//default value is unknown and will show up in stats table as unknown with proper tally
+
+/** convert controller (int) to actual controller (string)
+ * @param {Number} x 
+ * @returns controller string */
 function getController(x) {
   switch (x) {
       case 0: return "Wii Wheel";
@@ -491,9 +532,11 @@ function getController(x) {
       default: return "Unknown";
 }}
 
+/** converts vehicleId to actual vehicle, karts 1-17, bikes 18-35
+ * @param {Number} x 
+ * @returns vehicle string */
 function getVehicle(x) {
   switch (x) {
-      //karts 1-17,bikes 18-35
       case 0: return "Standard Kart S";
       case 1: return "Standard Kart M";
       case 2: return "Standard Kart L";
@@ -533,9 +576,12 @@ function getVehicle(x) {
       default: return "Unknown";
 }}
 
+/** Takes an int (driverId) and converts to character
+ * the first half is seemingly random and I don't think 42-47 are valid
+ * @param {Number} x 
+ * @returns character string */
 function getCharacter(x) {
   switch (x) {
-      //the first half is seemingly random
       case 0: return "Mario";
       case 1: return "Baby Peach";
       case 2: return "Waluigi";
@@ -585,13 +631,15 @@ function getCharacter(x) {
       case 46: return "Daisy Biker Outfit";
       case 47: return "Rosalina Biker Outfit";
       default: return "Unknown";
-      //I don't believe 42-47 are impossible
 }}
 
+/** All current record holders and some former are present
+ * Giant switch case to convert playerId to player name and country
+ * Add another case for new player records or new playerID for existing player
+ * Players often use hard to recognize mii names or incorrect regions when setting records
+ * @param {Number} x 
+ * @returns array ["player","images/XX.png"] */
 function getPlayerIDAndRegion(x) {
-  /* all current record holders and some former record holders
-  add another case for new player records or combine cases for new playerID
-  players often use hard to recognize mii names or incorrect regions when setting records */
   switch (x) {
     case '39B00EEE8050C7F5': return ["Doge","images/US.png"];
     case '51152E6C037842FB': return ["Lawrence","images/US.png"];
@@ -714,6 +762,7 @@ function getPlayerIDAndRegion(x) {
     case '487447841A8CB10A': return ["SpitFire","images/US.png"];
     case '532C35DD09E2A5C8': return ["Kevin G.","images/US.png"];
     case '47F412EAC1AC604F': return ["Sam","images/GB.png"];
+    case 'FDC8971B80CC9823': return ["JP","images/DK.png"];
     case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
     case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];//using stubbz old wii
