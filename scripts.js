@@ -15,7 +15,7 @@ function loadLeaderboard(load) {
   Promise.allSettled(fetches)
     .then((results) => {
 
-      let infoTitle = document.getElementById('myTable').getElementsByTagName('thead')[0];
+      let infoTitle = document.getElementById('main').getElementsByTagName('thead')[0];
       let titleRow = infoTitle.insertRow();
       let cellt1 = titleRow.insertCell(0),
       cellt2 = titleRow.insertCell(1),
@@ -39,13 +39,13 @@ function loadLeaderboard(load) {
       cellt9.innerHTML="Controller";
       cellt10.innerHTML="Date";
       cellt11.innerHTML="Duration";
-      let myTable = document.getElementById("myTable").getElementsByTagName('tbody')[0];
+      let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
       //create header row and init body row
 
       let category = 'Normal',
       playerTally = [['Unknown',0,"images/unknown.png"]], countryTally = [['Un',0,"images/unknown.png"]],
       vehicleTally = [['Unknown',0]], characterTally = [['Unknown',0]], controllerTally = [['Unknown',0]],
-      orderedDuration = [[0,"Unknown","Unknown","Unknown"]];
+      orderedDuration = [["Unknown",0,"Unknown","Unknown"]];
       //declare category and arrays with a default value for html tables
 
       for (let j=0;j<mainLB["leaderboards"].length;j++) {
@@ -92,18 +92,7 @@ function loadLeaderboard(load) {
             }
           }
           if (toBeAdded = addToArray(currentController,controllerTally)) {controllerTally.push([currentController,1])}
-
-          for (let n=0;n<10;n++) {
-            try {
-              if (duration>orderedDuration[n][0]) {
-                orderedDuration.splice(n,0,[duration,mainLB["leaderboards"][index]["name"]+": "+category,recordDate.slice(0,10),player[0]])
-                break; //adding to array for top 10 longest table
-              }
-            }
-            catch {
-              break; //catch is reached when duration is 0 so can't be part of top 10 longest records
-            }
-          }
+          orderedDuration.push([mainLB["leaderboards"][index]["name"]+": "+category,duration,recordDate.slice(0,10),player[0]]);
 
           cell1.innerHTML = mainLB["leaderboards"][index]["name"];
           cell2.innerHTML = category;
@@ -133,12 +122,29 @@ function loadLeaderboard(load) {
           console.log('Failed Fetching Record for: '+mainLB["leaderboards"][index]["name"]);
         }
       }
+      //Duration needs to be sorted, others are sorted to display better in charts
+      orderedDuration.sort(sortByQ);
+      countryTally.sort(sortByQ);
+      vehicleTally.sort(sortByQ);
+      characterTally.sort(sortByQ);
+      controllerTally.sort(sortByQ);
+
+      displayPie("vehicle",vehicleTally);
+      displayPie("character",characterTally);
+      displayPie("controller",controllerTally);
+      displayPie("country",countryTally);
+      
       displayTopTen(orderedDuration);
       displayTableWithPictures("playerList",playerTally,"Player Name","Total Records","Nation");
       displayTableWithPictures("countryList",countryTally,"Country","Total Records","Flag");
       displaySimpleTable("vehicleList",vehicleTally,"Vehicle","Total");
       displaySimpleTable("characterList",characterTally,"Character","Total");
       displaySimpleTable("controllerList",controllerTally,"Controller","Total");
+
+      let totalRecords = document.createElement("p");
+      totalRecords.appendChild(document.createTextNode(`Total Records: ${orderedDuration.length-1}`));
+      document.body.appendChild(totalRecords);
+      createRedirect();
   })
     .catch((err) => {
       console.log(err);
@@ -156,7 +162,7 @@ function loadLeaderboard(load) {
 //json containing html table information, maybe add table headers to array
 let tableInfo = {
   "main":{
-    "id": "myTable",
+    "id": "main",
     "class": "large-table",
     "header": "blank"
   },
@@ -173,22 +179,26 @@ let tableInfo = {
   "vehicle":{
     "id": "vehicleList",
     "class": "skinny-table",
-    "header": "Vehicle Total Stats"
+    "header": "Vehicle Total Stats",
+    "chart": "#vehiclePie"
   },
   "character":{
     "id": "characterList",
     "class": "skinny-table",
-    "header": "Character Total Stats"
+    "header": "Character Total Stats",
+    "chart": "#characterPie"
   },
   "controller":{
     "id": "controllerList",
     "class": "skinny-table",
-    "header": "Controller Total Stats"
+    "header": "Controller Total Stats",
+    "chart": "#controllerPie"
   },
   "country":{
     "id": "countryList",
     "class": "skinny-table",
-    "header": "Country Total Stats"
+    "header": "Country Total Stats",
+    "chart": "#countryPie"
   }
 }
 
@@ -215,7 +225,6 @@ function buildWebpage() {
   mainDiv.appendChild(createGridDiv("controller"));
   mainDiv.appendChild(createGridDiv("country"));
   document.body.appendChild(mainDiv);
-  createRedirect();
 }
 
 /** takes a string to reference its objects in tableInfo.json
@@ -233,6 +242,13 @@ function createTable(index) {
   return tableadd;
 }
 
+/** create h2 element */
+function createHeaderTwo(text) {
+  let statHeader = document.createElement("h2");
+  statHeader.appendChild(document.createTextNode(text));
+  return statHeader;
+}
+
 /** takes a string to reference its objects in tableInfo.json
  * makes a div with a header and table for grid layout
  * @param {string} index 
@@ -240,15 +256,11 @@ function createTable(index) {
 function createGridDiv(index) {
   let div = document.createElement("div");
   div.appendChild(createHeaderTwo(tableInfo[index]["header"]));
+  let divChart = document.createElement("div");
+  divChart.id = tableInfo[index]["chart"].slice(1);
+  div.appendChild(divChart);
   div.appendChild(createTable(index));
   return div;
-}
-
-/** create h2 element */
-function createHeaderTwo(text) {
-  let statHeader = document.createElement("h2");
-  statHeader.appendChild(document.createTextNode(text));
-  return statHeader;
 }
 
 /** create html image object
@@ -282,6 +294,11 @@ function getRecordDuration(recordset) { //(UTC time stamp)
   return Math.floor( (Date.now() - new Date(recordset)) / (1000*60*60*24) ); //elapsed time divided by one day in milliseconds
 }
 
+/** sorts nested array by its second element */
+function sortByQ(a,b) {
+  return b[1] - a[1];
+}
+
 /** increments array element unless value isn't present and returns true/false to determine if to push in main
  * @param {string} input 
  * @param {Array} dataset 
@@ -296,9 +313,30 @@ function addToArray(input,dataset) {
   return 1;
 }
 
+/** creates pie chart
+ * @param {string} tableIndex index for tableInfo
+ * @param {Array} dataset nested array */
+function displayPie(tableIndex,dataset) {
+  let numbers = [], titles = [];
+  for (let i=0;i<dataset.length-1;i++) {
+    numbers.push(dataset[i][1]);
+    titles.push(dataset[i][0]);
+  }
+
+  let options = {
+    colors:['#3498DB', '#F39C12', '#8E44AD','#7F8C8D','#E74C3C','#27AE60','#34495E','#F7DC6F'],
+    series: numbers,
+    chart: {type: 'pie'},
+    labels: titles
+  };
+
+  let chart = new ApexCharts(document.querySelector(tableInfo[tableIndex]["chart"]), options);
+  chart.render();
+}
+
 /** top 10 longest standing records,
  * th are fixed, array is already sorted so function just displays first ten elements
- * @param {Array} dataset array of arrays, this array is typically longer than 10 */
+ * @param {Array} dataset array of arrays */
 function displayTopTen(dataset) {
   let infoTitle = document.getElementById('longList').getElementsByTagName('thead')[0];
   let titleRow = infoTitle.insertRow();
@@ -321,14 +359,15 @@ function displayTopTen(dataset) {
     cell4 = infoRow.insertCell(3),
     cell5 = infoRow.insertCell(4);
     cell1.innerHTML=`${q+1}`;
-    cell2.innerHTML=dataset[q][0];
-    cell3.innerHTML=dataset[q][1];
+    cell2.innerHTML=dataset[q][1];
+    cell3.innerHTML=dataset[q][0];
     cell4.innerHTML=dataset[q][2];
     cell5.innerHTML=dataset[q][3];
   }
 }
 
-/** used for vehicle/character/controller tables
+/** used for vehicle/character/controller tables, 
+ * function does alphabetic and numerical sorting itself
  * @param {string} tableName 
  * @param {Array} dataset array of arrays ['name',total]
  * @param {string} title1 order matters
@@ -342,7 +381,7 @@ function displaySimpleTable(tableName,dataset,title1,title2) {
   cellt2.innerHTML=title2;
   let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
 
-  for (let l=1;l<dataset.length;l++) {
+  for (let l=0;l<dataset.length-1;l++) {
     let playerIndex = 0;
     let nextplayerIndex = 1;
     let dataRow = infoList.insertRow();
@@ -350,10 +389,6 @@ function displaySimpleTable(tableName,dataset,title1,title2) {
     cell2 = dataRow.insertCell(1);
 
     for (let m=0;m<dataset.length;m++) {
-      /* checks numerical first than alphabetical
-      playerIndex is the index of the current largest number/lowest starting letter // starts at "Unknown",0
-      nextplayerIndex is the index currently being compared against 
-      if either condition passes, playerIndex becomes nextplayerIndex */
       if (dataset[nextplayerIndex][1]>dataset[playerIndex][1]) {
         playerIndex = nextplayerIndex;
       }
@@ -368,7 +403,8 @@ function displaySimpleTable(tableName,dataset,title1,title2) {
   }
 }
 
-/** used for nation and player tables, 3 elements
+/** used for nation and player tables, 3 elements, 
+ * function does alphabetic and numerical sorting itself
  * @param {string} tableName 
  * @param {Array} dataset array of arrays ['name',total,'flag']
  * @param {string} title1 order matters
@@ -385,7 +421,7 @@ function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
   cellt3.innerHTML=title3;
   let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
 
-  for (let l=1;l<dataset.length;l++) {
+  for (let l=0;l<dataset.length-1;l++) {
     let playerIndex = 0;
     let nextplayerIndex = 1;
     let dataRow = infoList.insertRow();
@@ -394,10 +430,6 @@ function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
     cell3 = dataRow.insertCell(2);
 
     for (let m=0;m<dataset.length;m++) {
-      /* checks numerical first than alphabetical
-      playerIndex is the index of the current largest number/lowest starting letter // starts at "Unknown",0
-      nextplayerIndex is the index currently being compared against 
-      if either condition passes, playerIndex becomes nextplayerIndex */
       if (dataset[nextplayerIndex][1]>dataset[playerIndex][1]) {
         playerIndex = nextplayerIndex;
       }
@@ -762,7 +794,8 @@ function getPlayerIDAndRegion(x) {
     case '487447841A8CB10A': return ["SpitFire","images/US.png"];
     case '532C35DD09E2A5C8': return ["Kevin G.","images/US.png"];
     case '47F412EAC1AC604F': return ["Sam","images/GB.png"];
-    case 'FDC8971B80CC9823': return ["JP","images/DK.png"];
+    case 'FDC8971B80CC9823': return ["Abby","images/US.png"];
+    case '7C625EF944C73FEA': return ["Emiddle","images/PH.png"];
     case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
     case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];//using stubbz old wii
