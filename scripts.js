@@ -42,9 +42,10 @@ function loadLeaderboard(load) {
       let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
       //create header row and init body row
 
-      let category = 'Normal',
+      let category = 'Normal', allDates = [], allYears = [["2017",0]],
       playerTally = [['Unknown',0,"images/unknown.png"]], countryTally = [['Un',0,"images/unknown.png"]],
       vehicleTally = [['Unknown',0]], characterTally = [['Unknown',0]], controllerTally = [['Unknown',0]],
+      glitchTally = [['Unknown',0,"images/unknown.png"]], noGlitchTally = [['Unknown',0,"images/unknown.png"]],
       orderedDuration = [["Unknown",0,"Unknown","Unknown"]];
       //declare category and arrays with a default value for html tables
 
@@ -84,6 +85,13 @@ function loadLeaderboard(load) {
           if (toBeAdded = addToArray(player[1].slice(7,9),countryTally)) {countryTally.push([player[1].slice(7,9),1,player[1]])}
           if (toBeAdded = addToArray(currentVehicle,vehicleTally)) {vehicleTally.push([currentVehicle,1])}
           if (toBeAdded = addToArray(currentCharacter,characterTally)) {characterTally.push([currentCharacter,1])}
+          if (toBeAdded = addToArray(recordDate.slice(0,4),allYears)) {allYears.push([recordDate.slice(0,4),1])}
+          if (category==="Glitch") {
+            if (toBeAdded = addToArray(player[0],glitchTally)) {glitchTally.push([player[0],1,player[1]])}
+          }
+          else {
+            if (toBeAdded = addToArray(player[0],noGlitchTally)) {noGlitchTally.push([player[0],1,player[1]])}
+          }
           //array.push doesn't seem to work in a function
 
           if (currentController==="Gamecube") {
@@ -91,8 +99,10 @@ function loadLeaderboard(load) {
               currentController="USB-GCN"; //intercept USB-GCN before addToArray
             }
           }
+          recordDate=recordDate.slice(0,10);
+          allDates.push(recordDate);
           if (toBeAdded = addToArray(currentController,controllerTally)) {controllerTally.push([currentController,1])}
-          orderedDuration.push([mainLB["leaderboards"][index]["name"]+": "+category,duration,recordDate.slice(0,10),player[0]]);
+          orderedDuration.push([mainLB["leaderboards"][index]["name"]+": "+category,duration,recordDate,player[0]]);
 
           cell1.innerHTML = mainLB["leaderboards"][index]["name"];
           cell2.innerHTML = category;
@@ -103,7 +113,7 @@ function loadLeaderboard(load) {
           cell7.innerHTML = currentCharacter;
           cell8.innerHTML = currentVehicle;
           cell9.innerHTML = currentController;
-          cell10.innerHTML = recordDate.slice(0,10);
+          cell10.innerHTML = recordDate;
           cell11.innerHTML = duration;
         }
         else if (results[index]["status"] === "rejected") {
@@ -123,11 +133,13 @@ function loadLeaderboard(load) {
         }
       }
       //Duration needs to be sorted, others are sorted to display better in charts
-      orderedDuration.sort(sortByQ);
-      countryTally.sort(sortByQ);
-      vehicleTally.sort(sortByQ);
-      characterTally.sort(sortByQ);
-      controllerTally.sort(sortByQ);
+      orderedDuration.sort(sortByQ2);
+      countryTally.sort(sortByQ2);
+      vehicleTally.sort(sortByQ2);
+      characterTally.sort(sortByQ2);
+      controllerTally.sort(sortByQ2);
+      allYears.sort(sortByQ1);
+      document.getElementById("totalCount").textContent=`Total Records: ${allDates.length}`;
 
       displayPie("vehicle",vehicleTally);
       displayPie("character",characterTally);
@@ -136,14 +148,16 @@ function loadLeaderboard(load) {
       
       displayTopTen(orderedDuration);
       displayTableWithPictures("playerList",playerTally,"Player Name","Total Records","Nation");
+      displayTableWithPictures("glitchList",glitchTally,"Player Name","Total Records","Nation");
+      displayTableWithPictures("noGlitchList",noGlitchTally,"Player Name","Total Records","Nation");
       displayTableWithPictures("countryList",countryTally,"Country","Total Records","Flag");
       displaySimpleTable("vehicleList",vehicleTally,"Vehicle","Total");
       displaySimpleTable("characterList",characterTally,"Character","Total");
       displaySimpleTable("controllerList",controllerTally,"Controller","Total");
 
-      let totalRecords = document.createElement("p");
-      totalRecords.appendChild(document.createTextNode(`Total Records: ${orderedDuration.length-1}`));
-      document.body.appendChild(totalRecords);
+      let yearSplit = splitTwoColumn(allYears);
+      displayBar("years",yearSplit[0],yearSplit[1]);
+      displayBar("dates",getMonths(allDates),["Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"]);
       createRedirect();
   })
     .catch((err) => {
@@ -174,7 +188,17 @@ let tableInfo = {
   "player":{
     "id": "playerList",
     "class": "skinny-table",
-    "header": "Player Total Stats"
+    "header": "Combined Player Total Stats"
+  },
+  "glitch":{
+    "id": "glitchList",
+    "class": "skinny-table",
+    "header": "Player Totals: Glitch"
+  },
+  "noGlitch":{
+    "id": "noGlitchList",
+    "class": "skinny-table",
+    "header": "Player Total: No-glitch"
   },
   "vehicle":{
     "id": "vehicleList",
@@ -199,6 +223,20 @@ let tableInfo = {
     "class": "skinny-table",
     "header": "Country Total Stats",
     "chart": "#countryPie"
+  },
+  "years":{
+    "id": "yearList",
+    "class": "skinny-table",
+    "header": "Year Total Stats",
+    "chart": "#yearBar",
+    "tooltip": "Current Records set this month"
+  },
+  "dates":{
+    "id": "monthList",
+    "class": "skinny-table",
+    "header": "Records by Month",
+    "chart": "#monthsBar",
+    "tooltip": "Current Records set this month"
   }
 }
 
@@ -215,27 +253,49 @@ function buildWebpage() {
   let statBanner = document.createElement("p");
   statBanner.appendChild(document.createTextNode("Stats are sorted by quantity first and then alphabetically."));
   document.body.appendChild(statBanner);
-
+  document.body.appendChild(createHeaderTwo(tableInfo["top"]["header"]));
   document.body.appendChild(createTable("top"));
-  document.body.appendChild(createTable("player"));
+
+  playerDiv = document.createElement("div");
+  playerDiv.className = "triple-grid";
+  playerDiv.appendChild(createTableHeaderDiv("noGlitch"));
+  playerDiv.appendChild(createTableHeaderDiv("player"));
+  playerDiv.appendChild(createTableHeaderDiv("glitch"));
+  document.body.appendChild(playerDiv);
+
   mainDiv = document.createElement("div");
   mainDiv.className = "grid-container";
-  mainDiv.appendChild(createGridDiv("vehicle"));
-  mainDiv.appendChild(createGridDiv("character"));
-  mainDiv.appendChild(createGridDiv("controller"));
-  mainDiv.appendChild(createGridDiv("country"));
+  mainDiv.appendChild(createTableChartDiv("vehicle"));
+  mainDiv.appendChild(createTableChartDiv("character"));
+  mainDiv.appendChild(createTableChartDiv("controller"));
+  mainDiv.appendChild(createTableChartDiv("country"));
   document.body.appendChild(mainDiv);
+
+  chronoDiv = document.createElement("div");
+  chronoDiv.className = "triple-grid";
+  yearsDiv = document.createElement("div");
+  yearsDiv.appendChild(createChart("years"));
+  datesDiv = document.createElement("div");
+  datesDiv.appendChild(createChart("dates"));
+  chronoDiv.appendChild(yearsDiv);
+  headerDiv = document.createElement("div");
+  let totalCount = document.createElement("h2");
+  totalCount.id = "totalCount";
+  totalCount.appendChild(document.createTextNode("0"));
+  headerDiv.appendChild(totalCount);
+  headerDiv.appendChild(createHeaderTwo("Current Date: "+`${new Date().getMonth()+1}`+"/"+`${new Date().getDate()}`+"/"+`${new Date().getFullYear()}`));
+  headerDiv.appendChild(createHeaderTwo("Records by Year and Month"));
+  chronoDiv.appendChild(headerDiv);
+  chronoDiv.appendChild(datesDiv);
+  document.body.appendChild(chronoDiv);
 }
 
 /** takes a string to reference its objects in tableInfo.json
  * @param {string} index 
  * @returns blank table */
 function createTable(index) {
-  if (index ==="top" || index ==="player") {
-    document.body.appendChild(createHeaderTwo(tableInfo[index]["header"]));
-  }
   let tableadd = document.createElement("table");
-  tableadd.id = tableInfo[index]["id"]; 
+  tableadd.id = tableInfo[index]["id"];
   tableadd.className = tableInfo[index]["class"];
   tableadd.createTHead();
   tableadd.createTBody();
@@ -253,12 +313,32 @@ function createHeaderTwo(text) {
  * makes a div with a header and table for grid layout
  * @param {string} index 
  * @returns */
-function createGridDiv(index) {
+function createTableChartDiv(index) {
   let div = document.createElement("div");
   div.appendChild(createHeaderTwo(tableInfo[index]["header"]));
+  let subdiv = document.createElement("div");
+  subdiv.className = "inner-grid";
+  subdiv.appendChild(createChart(index));
+  subdiv.appendChild(createTable(index));
+  div.appendChild(subdiv);
+  return div;
+}
+
+/** create a div for a chart
+ * @param {string} index 
+ * @returns */
+function createChart(index) {
   let divChart = document.createElement("div");
   divChart.id = tableInfo[index]["chart"].slice(1);
-  div.appendChild(divChart);
+  return divChart;
+}
+
+/** uses index for tableInfo
+ * @param {string} index 
+ * @returns div element containing header and table */
+function createTableHeaderDiv(index) {
+  let div = document.createElement("div");
+  div.appendChild(createHeaderTwo(tableInfo[index]["header"]));
   div.appendChild(createTable(index));
   return div;
 }
@@ -294,9 +374,25 @@ function getRecordDuration(recordset) { //(UTC time stamp)
   return Math.floor( (Date.now() - new Date(recordset)) / (1000*60*60*24) ); //elapsed time divided by one day in milliseconds
 }
 
+/** sorts nested array by its first element */
+function sortByQ1(a,b) {
+  return b[0] - a[0];
+}
+
 /** sorts nested array by its second element */
-function sortByQ(a,b) {
+function sortByQ2(a,b) {
   return b[1] - a[1];
+}
+
+/** sorts records into month they were achieved
+ * @param {Array} dataset 
+ * @returns array*/
+function getMonths(dataset) {
+  let months = [0,0,0,0,0,0,0,0,0,0,0,0];
+  for (let i=0;i<dataset.length;i++) {
+  months[parseInt(dataset[i].slice(5,7))-1]++;
+  }
+  return months;
 }
 
 /** increments array element unless value isn't present and returns true/false to determine if to push in main
@@ -313,6 +409,20 @@ function addToArray(input,dataset) {
   return 1;
 }
 
+/** takes an array and returns another array with seperate arrays of the first two columns
+ * @param {Array} dataset 
+ * @returns array */
+function splitTwoColumn(dataset) {
+  let one = [], two = [];
+  for (let i=0;i<dataset.length;i++) {
+    if (dataset[i][1]>0) {
+      one.push(dataset[i][1]);
+      two.push(dataset[i][0]);
+    }
+  }
+  return [one,two];
+}
+
 /** creates pie chart
  * @param {string} tableIndex index for tableInfo
  * @param {Array} dataset nested array */
@@ -326,12 +436,63 @@ function displayPie(tableIndex,dataset) {
   let options = {
     colors:['#3498DB', '#F39C12', '#8E44AD','#7F8C8D','#E74C3C','#27AE60','#34495E','#F7DC6F'],
     series: numbers,
-    chart: {type: 'pie'},
+    chart: {width: 450,type: 'pie'},
     labels: titles
   };
 
   let chart = new ApexCharts(document.querySelector(tableInfo[tableIndex]["chart"]), options);
   chart.render();
+}
+
+/** creates bar charts, used for years and months
+ * @param {string} tableIndex tableInfo
+ * @param {Array} dataset 
+ * @param {Array} x values for x-axis */
+function displayBar(tableIndex,dataset,x) {
+  let options = {
+    series: [{
+      name: `Current Records set this ${tableInfo[tableIndex]["tooltip"].slice(0,4)}`,
+      data: dataset
+    }],
+    chart: {
+    type: 'bar',
+    height: 350,
+    width: 500
+  },
+  xaxis: {
+    categories: x,
+  },
+  yaxis: {
+    title: {
+      text: 'Count'
+    }
+  },
+  fill: {
+    opacity: 1
+  }
+  };
+
+  let chart = new ApexCharts(document.querySelector(tableInfo[tableIndex]["chart"]), options);
+  chart.render();
+}
+
+/** creates an array of records per month for a given year
+ * unused, was used to combine year and month into one table
+ * @param {Array} dataset 
+ * @param {number} year 
+ * @returns json object with name and data */
+function getMonthBundleByYear(dataset,year) {
+  let months = [0,0,0,0,0,0,0,0,0,0,0,0];
+  for (let i=0;i<dataset.length;i++) {
+    if (dataset[i].slice(0,4)===year) {
+      for (let m=0;m<12;m++) {
+        if (parseInt(dataset[i].slice(5,7))===m+1) {
+          months[m]++;
+        }
+      }
+    }
+  }
+  return {name: year,data: months};
 }
 
 /** top 10 longest standing records,
@@ -796,6 +957,7 @@ function getPlayerIDAndRegion(x) {
     case '47F412EAC1AC604F': return ["Sam","images/GB.png"];
     case 'FDC8971B80CC9823': return ["Abby","images/US.png"];
     case '7C625EF944C73FEA': return ["Emiddle","images/PH.png"];
+    case '8B2AA1EB59B08E78': return ["Neptune","images/US.png"];
     case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
     case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];//using stubbz old wii
