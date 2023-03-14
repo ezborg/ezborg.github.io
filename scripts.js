@@ -126,19 +126,15 @@ function loadLeaderboard(load) {
           cell6.innerHTML = "to";
           cell7.innerHTML = "fetch";
           cell8.innerHTML = "ghost";
-          cell9.innerHTML = "data";
+          cell9.innerHTML = "-";
           cell10.innerHTML = recordDate.slice(0,10);
           cell11.innerHTML = getRecordDuration(recordDate);
           console.log('Failed Fetching Record for: '+mainLB["leaderboards"][index]["name"]);
         }
       }
-      //Duration needs to be sorted, others are sorted to display better in charts
-      orderedDuration.sort(sortByQ2);
-      countryTally.sort(sortByQ2);
-      vehicleTally.sort(sortByQ2);
-      characterTally.sort(sortByQ2);
-      controllerTally.sort(sortByQ2);
-      allYears.sort(sortByQ1);
+      orderedDuration.sort(sortByQ2); countryTally.sort(sortByQ2); vehicleTally.sort(sortByQ2); characterTally.sort(sortByQ2);
+      controllerTally.sort(sortByQ2); playerTally.sort(sortByQ2); glitchTally.sort(sortByQ2); noGlitchTally.sort(sortByQ2);
+      allYears.sort(sortByQ1); //numerically sorting 
       document.getElementById("totalCount").textContent=`Total Records: ${allDates.length}`;
 
       displayPie("vehicle",vehicleTally);
@@ -157,7 +153,7 @@ function loadLeaderboard(load) {
 
       let yearSplit = splitTwoColumn(allYears);
       displayBar("years",yearSplit[0],yearSplit[1]);
-      displayBar("dates",getMonths(allDates),["Jan","Feb","Mar","Apr","May","June","July","Aug","Sept","Oct","Nov","Dec"]);
+      displayBar("dates",getMonths(allDates),["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"]);
       createRedirect();
   })
     .catch((err) => {
@@ -188,7 +184,7 @@ let tableInfo = {
   "player":{
     "id": "playerList",
     "class": "skinny-table",
-    "header": "Combined Player Total Stats"
+    "header": "Combined Player Totals"
   },
   "glitch":{
     "id": "glitchList",
@@ -229,14 +225,14 @@ let tableInfo = {
     "class": "skinny-table",
     "header": "Year Total Stats",
     "chart": "#yearBar",
-    "tooltip": "Current Records set this month"
+    "tooltip": "Year"
   },
   "dates":{
     "id": "monthList",
     "class": "skinny-table",
     "header": "Records by Month",
     "chart": "#monthsBar",
-    "tooltip": "Current Records set this month"
+    "tooltip": "Month"
   }
 }
 
@@ -290,38 +286,11 @@ function buildWebpage() {
   document.body.appendChild(chronoDiv);
 }
 
-/** takes a string to reference its objects in tableInfo.json
- * @param {string} index 
- * @returns blank table */
-function createTable(index) {
-  let tableadd = document.createElement("table");
-  tableadd.id = tableInfo[index]["id"];
-  tableadd.className = tableInfo[index]["class"];
-  tableadd.createTHead();
-  tableadd.createTBody();
-  return tableadd;
-}
-
 /** create h2 element */
 function createHeaderTwo(text) {
   let statHeader = document.createElement("h2");
   statHeader.appendChild(document.createTextNode(text));
   return statHeader;
-}
-
-/** takes a string to reference its objects in tableInfo.json
- * makes a div with a header and table for grid layout
- * @param {string} index 
- * @returns */
-function createTableChartDiv(index) {
-  let div = document.createElement("div");
-  div.appendChild(createHeaderTwo(tableInfo[index]["header"]));
-  let subdiv = document.createElement("div");
-  subdiv.className = "inner-grid";
-  subdiv.appendChild(createChart(index));
-  subdiv.appendChild(createTable(index));
-  div.appendChild(subdiv);
-  return div;
 }
 
 /** create a div for a chart
@@ -361,6 +330,33 @@ function createRedirect() {
   document.body.appendChild(redirect);
 }
 
+/** takes a string to reference its objects in tableInfo.json
+ * @param {string} index 
+ * @returns blank table */
+function createTable(index) {
+  let tableadd = document.createElement("table");
+  tableadd.id = tableInfo[index]["id"];
+  tableadd.className = tableInfo[index]["class"];
+  tableadd.createTHead();
+  tableadd.createTBody();
+  return tableadd;
+}
+
+/** takes a string to reference its objects in tableInfo.json
+ * makes a div with a header and table for grid layout
+ * @param {string} index 
+ * @returns */
+function createTableChartDiv(index) {
+  let div = document.createElement("div");
+  div.appendChild(createHeaderTwo(tableInfo[index]["header"]));
+  let subdiv = document.createElement("div");
+  subdiv.className = "inner-grid";
+  subdiv.appendChild(createChart(index));
+  subdiv.appendChild(createTable(index));
+  div.appendChild(subdiv);
+  return div;
+}
+
 
 /*****************************************************************************/
 /*                              Helper Functions                             */
@@ -382,6 +378,16 @@ function sortByQ1(a,b) {
 /** sorts nested array by its second element */
 function sortByQ2(a,b) {
   return b[1] - a[1];
+}
+
+/** recursive function to return correct alphabetical index
+ * @param {Array} dataset 
+ * @param {Number} index 
+ * @returns index */
+function findLowestAlphabetical(dataset,index) {
+  if (dataset[index][1]===dataset[index+1][1]) {return findLowestAlphabetical(dataset,index+1)}
+  if (dataset[index][0]<dataset[index-1][0]) {return index;}
+  else {return index-1;}
 }
 
 /** sorts records into month they were achieved
@@ -423,6 +429,25 @@ function splitTwoColumn(dataset) {
   return [one,two];
 }
 
+/** creates an array of records per month for a given year
+ * unused, was used to combine year and month into one table
+ * @param {Array} dataset 
+ * @param {number} year 
+ * @returns json object with name and data */
+function getMonthBundleByYear(dataset,year) {
+  let months = [0,0,0,0,0,0,0,0,0,0,0,0];
+  for (let i=0;i<dataset.length;i++) {
+    if (dataset[i].slice(0,4)===year) {
+      for (let m=0;m<12;m++) {
+        if (parseInt(dataset[i].slice(5,7))===m+1) {
+          months[m]++;
+        }
+      }
+    }
+  }
+  return {name: year,data: months};
+}
+
 /** creates pie chart
  * @param {string} tableIndex index for tableInfo
  * @param {Array} dataset nested array */
@@ -451,7 +476,7 @@ function displayPie(tableIndex,dataset) {
 function displayBar(tableIndex,dataset,x) {
   let options = {
     series: [{
-      name: `Current Records set this ${tableInfo[tableIndex]["tooltip"].slice(0,4)}`,
+      name: `Current Records set in this ${tableInfo[tableIndex]["tooltip"]}`,
       data: dataset
     }],
     chart: {
@@ -459,40 +484,75 @@ function displayBar(tableIndex,dataset,x) {
     height: 350,
     width: 500
   },
-  xaxis: {
-    categories: x,
-  },
-  yaxis: {
-    title: {
-      text: 'Count'
-    }
-  },
-  fill: {
-    opacity: 1
-  }
+  xaxis: {categories: x},
+  yaxis: {title: {text: 'Count'}},
+  fill: {opacity: 1}
   };
 
   let chart = new ApexCharts(document.querySelector(tableInfo[tableIndex]["chart"]), options);
   chart.render();
 }
 
-/** creates an array of records per month for a given year
- * unused, was used to combine year and month into one table
- * @param {Array} dataset 
- * @param {number} year 
- * @returns json object with name and data */
-function getMonthBundleByYear(dataset,year) {
-  let months = [0,0,0,0,0,0,0,0,0,0,0,0];
-  for (let i=0;i<dataset.length;i++) {
-    if (dataset[i].slice(0,4)===year) {
-      for (let m=0;m<12;m++) {
-        if (parseInt(dataset[i].slice(5,7))===m+1) {
-          months[m]++;
-        }
-      }
+/** used for vehicle/character/controller tables, 
+ * function does alphabetic and numerical sorting itself
+ * @param {string} tableName 
+ * @param {Array} dataset array of arrays ['name',total]
+ * @param {string} title1 order matters
+ * @param {string} title2  */
+function displaySimpleTable(tableName,dataset,title1,title2) {
+  let infoTitle = document.getElementById(tableName).getElementsByTagName('thead')[0];
+  let titleRow = infoTitle.insertRow();
+  let cellt1 = titleRow.insertCell(0),
+  cellt2 = titleRow.insertCell(1);
+  cellt1.innerHTML=title1;
+  cellt2.innerHTML=title2;
+  let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
+  let playerIndex = 0; originalLength = dataset.length;
+
+  for (let l=0;l<originalLength-1;l++) {
+    let dataRow = infoList.insertRow();
+    let cell1 = dataRow.insertCell(0), cell2 = dataRow.insertCell(1);
+    if (dataset[playerIndex][1]==dataset[playerIndex+1][1]) {
+      playerIndex = findLowestAlphabetical(dataset,playerIndex);
     }
+    cell1.innerHTML = dataset[playerIndex][0];
+    cell2.innerHTML = dataset[playerIndex][1];
+    dataset.splice(playerIndex,1);
+    playerIndex = 0;
   }
-  return {name: year,data: months};
+}
+
+/** used for nation and player tables, 3 elements, 
+ * function does alphabetic and numerical sorting itself
+ * @param {string} tableName 
+ * @param {Array} dataset array of arrays ['name',total,'flag']
+ * @param {string} title1 order matters
+ * @param {string} title2 
+ * @param {string} title3 */
+function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
+  let infoTitle = document.getElementById(tableName).getElementsByTagName('thead')[0];
+  let titleRow = infoTitle.insertRow();
+  let cellt1 = titleRow.insertCell(0),
+  cellt2 = titleRow.insertCell(1),
+  cellt3 = titleRow.insertCell(2);
+  cellt1.innerHTML=title1;
+  cellt2.innerHTML=title2;
+  cellt3.innerHTML=title3;
+  let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
+  let playerIndex = 0; originalLength = dataset.length;
+
+  for (let l=0;l<originalLength-1;l++) {
+    let dataRow = infoList.insertRow();
+    let cell1 = dataRow.insertCell(0), cell2 = dataRow.insertCell(1), cell3 = dataRow.insertCell(2);
+    if (dataset[playerIndex][1]==dataset[playerIndex+1][1]) {
+      playerIndex = findLowestAlphabetical(dataset,playerIndex);
+    }
+    cell1.innerHTML = dataset[playerIndex][0];
+    cell2.innerHTML = dataset[playerIndex][1];
+    cell3.appendChild(createImage(dataset[playerIndex][2]));
+    dataset.splice(playerIndex,1);
+    playerIndex = 0;
+  }
 }
 
 /** top 10 longest standing records,
@@ -524,85 +584,6 @@ function displayTopTen(dataset) {
     cell3.innerHTML=dataset[q][0];
     cell4.innerHTML=dataset[q][2];
     cell5.innerHTML=dataset[q][3];
-  }
-}
-
-/** used for vehicle/character/controller tables, 
- * function does alphabetic and numerical sorting itself
- * @param {string} tableName 
- * @param {Array} dataset array of arrays ['name',total]
- * @param {string} title1 order matters
- * @param {string} title2  */
-function displaySimpleTable(tableName,dataset,title1,title2) {
-  let infoTitle = document.getElementById(tableName).getElementsByTagName('thead')[0];
-  let titleRow = infoTitle.insertRow();
-  let cellt1 = titleRow.insertCell(0),
-  cellt2 = titleRow.insertCell(1);
-  cellt1.innerHTML=title1;
-  cellt2.innerHTML=title2;
-  let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
-
-  for (let l=0;l<dataset.length-1;l++) {
-    let playerIndex = 0;
-    let nextplayerIndex = 1;
-    let dataRow = infoList.insertRow();
-    let cell1 = dataRow.insertCell(0),
-    cell2 = dataRow.insertCell(1);
-
-    for (let m=0;m<dataset.length;m++) {
-      if (dataset[nextplayerIndex][1]>dataset[playerIndex][1]) {
-        playerIndex = nextplayerIndex;
-      }
-      else if (dataset[nextplayerIndex][1]==dataset[playerIndex][1] && dataset[nextplayerIndex][0]<dataset[playerIndex][0]) {
-        playerIndex = nextplayerIndex;
-      }
-      nextplayerIndex = m+1;
-    }
-    cell1.innerHTML = dataset[playerIndex][0];
-    cell2.innerHTML = dataset[playerIndex][1];
-    dataset[playerIndex][1] = 0;
-  }
-}
-
-/** used for nation and player tables, 3 elements, 
- * function does alphabetic and numerical sorting itself
- * @param {string} tableName 
- * @param {Array} dataset array of arrays ['name',total,'flag']
- * @param {string} title1 order matters
- * @param {string} title2 
- * @param {string} title3 */
-function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
-  let infoTitle = document.getElementById(tableName).getElementsByTagName('thead')[0];
-  let titleRow = infoTitle.insertRow();
-  let cellt1 = titleRow.insertCell(0),
-  cellt2 = titleRow.insertCell(1),
-  cellt3 = titleRow.insertCell(2);
-  cellt1.innerHTML=title1;
-  cellt2.innerHTML=title2;
-  cellt3.innerHTML=title3;
-  let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
-
-  for (let l=0;l<dataset.length-1;l++) {
-    let playerIndex = 0;
-    let nextplayerIndex = 1;
-    let dataRow = infoList.insertRow();
-    let cell1 = dataRow.insertCell(0),
-    cell2 = dataRow.insertCell(1),
-    cell3 = dataRow.insertCell(2);
-
-    for (let m=0;m<dataset.length;m++) {
-      if (dataset[nextplayerIndex][1]>dataset[playerIndex][1]) {
-        playerIndex = nextplayerIndex;
-      }
-      else if (dataset[nextplayerIndex][1]==dataset[playerIndex][1] && dataset[nextplayerIndex][0]<dataset[playerIndex][0]) {
-        playerIndex = nextplayerIndex;
-      }
-      nextplayerIndex = m+1;
-    }
-    cell1.innerHTML = dataset[playerIndex][0];
-    cell2.innerHTML = dataset[playerIndex][1];
-    cell3.appendChild(createImage(dataset[playerIndex][2]));
-    dataset[playerIndex][1] = 0;
   }
 }
 
