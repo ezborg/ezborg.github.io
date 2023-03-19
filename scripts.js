@@ -9,39 +9,16 @@ function loadLeaderboard(load) {
   /*for (let i=0;i<mainLB["leaderboards"].length;i++) {
     urlList.push(new URL(this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=1',baseURL));
   } //FUTURE if new params found: url.searchParams.set("limit",1) */
-
   for (let i=0;i<mainLB["leaderboards"].length;i++) { //must use https://
     urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=1');
   }
-
   let fetches = urlList.map(url => fetch(url).then(res => res.json()));
+
   Promise.allSettled(fetches)
     .then((results) => {
 
       let infoTitle = document.getElementById('main').getElementsByTagName('thead')[0];
-      let titleRow = infoTitle.insertRow();
-      let cellt1 = titleRow.insertCell(0),
-      cellt2 = titleRow.insertCell(1),
-      cellt3 = titleRow.insertCell(2),
-      cellt4 = titleRow.insertCell(3),
-      cellt5 = titleRow.insertCell(4),
-      cellt6 = titleRow.insertCell(5),
-      cellt7 = titleRow.insertCell(6),
-      cellt8 = titleRow.insertCell(7),
-      cellt9 = titleRow.insertCell(8),
-      cellt10 = titleRow.insertCell(9),
-      cellt11 = titleRow.insertCell(10);
-      cellt1.innerHTML="Track Name";
-      cellt2.innerHTML="Category";
-      cellt3.innerHTML="Time";
-      cellt4.innerHTML="Player Name";
-      cellt5.innerHTML="Mii";
-      cellt6.innerHTML="Nation";
-      cellt7.innerHTML="Character";
-      cellt8.innerHTML="Vehicle";
-      cellt9.innerHTML="Controller";
-      cellt10.innerHTML="Date";
-      cellt11.innerHTML="Duration";
+      createTableHeader11(infoTitle.insertRow(),"Track Name","Category","Time","Player Name","Mii","Nation","Character","Vehicle","Controller","Date","Duration");
       let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
       //create header row and init body row
 
@@ -385,16 +362,6 @@ function getRecordDuration(recordset) { //(UTC time stamp)
   return Math.floor( (Date.now() - new Date(recordset)) / (1000*60*60*24) ); //elapsed time divided by one day in milliseconds
 }
 
-/** recursive function to return correct alphabetical index
- * @param {Array} dataset 
- * @param {Number} index 
- * @returns index */
-function findLowestAlphabetical(dataset,index) {
-  if (dataset[index][1]===dataset[index+1][1]) {return findLowestAlphabetical(dataset,index+1)}
-  if (dataset[index][0]<dataset[index-1][0]) {return index;}
-  else {return index-1;}
-}
-
 /** sorts records into month they were achieved
  * @param {Array} dataset 
  * @returns array*/
@@ -432,6 +399,21 @@ function splitTwoColumn(dataset) {
     }
   }
   return [one,two];
+}
+
+/** recursive function to return correct alphabetical index
+ * @param {Array} dataset 
+ * @param {Number} index 
+ * @param {Number} lowIndex 
+ * @returns index of lowest alphabet and same count */
+function findLowestAlphabetical(dataset,index,lowIndex) {
+  if (dataset[index][1]===dataset[index+1][1]) {
+    if (dataset[lowIndex][0]>dataset[index+1][0]) {
+      lowIndex = index+1;
+    }
+    return findLowestAlphabetical(dataset,index+1,lowIndex)
+  }
+  else {return lowIndex;}
 }
 
 /** creates an array of records per month for a given year
@@ -518,7 +500,7 @@ function displaySimpleTable(tableName,dataset,title1,title2) {
     let dataRow = infoList.insertRow();
     let cell1 = dataRow.insertCell(0), cell2 = dataRow.insertCell(1);
     if (dataset[playerIndex][1]==dataset[playerIndex+1][1]) {
-      playerIndex = findLowestAlphabetical(dataset,playerIndex); //alphabetically sorting
+      playerIndex = findLowestAlphabetical(dataset,playerIndex,playerIndex); //alphabetically sorting
     }
     cell1.innerHTML = dataset[playerIndex][0];
     cell2.innerHTML = dataset[playerIndex][1];
@@ -550,7 +532,7 @@ function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
     let dataRow = infoList.insertRow();
     let cell1 = dataRow.insertCell(0), cell2 = dataRow.insertCell(1), cell3 = dataRow.insertCell(2);
     if (dataset[playerIndex][1]==dataset[playerIndex+1][1]) {
-      playerIndex = findLowestAlphabetical(dataset,playerIndex); //alphabetically sorting
+      playerIndex = findLowestAlphabetical(dataset,playerIndex,playerIndex); //alphabetically sorting
     }
     cell1.innerHTML = dataset[playerIndex][0];
     cell2.innerHTML = dataset[playerIndex][1];
@@ -939,6 +921,7 @@ function getPlayerIDAndRegion(x) {
     case 'FDC8971B80CC9823': return ["Abby","images/US.png"];
     case '7C625EF944C73FEA': return ["Emiddle","images/PH.png"];
     case '8B2AA1EB59B08E78': return ["Neptune","images/US.png"];
+    case 'C924039608AEDE35': return ["RyanUK","images/GB.png"];
     case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
     case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];//using stubbz old wii
@@ -947,3 +930,149 @@ function getPlayerIDAndRegion(x) {
     case '2240C482ADD7E0D3': case '2CC8A5568F7A106B': case '8A1F856DCE285FEF': return ["Scorpi","images/GB.png"];
     default: return ["Unknown","images/unknown.png"];
 }}
+
+
+/*****************************************************************************/
+/*                         Personal Top 10 Funcs                             */
+/*****************************************************************************/
+
+
+function topsByPID(load,playerID) {
+  fetch(load).then(mainRes => {mainRes.json().then(mainLB =>{this.mainLB = mainLB;
+
+    for (let i=0;i<mainLB["leaderboards"].length;i++) {
+      urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=100');
+    }
+    let fetches = urlList.map(url => fetch(url).then(res => res.json()));
+
+    Promise.allSettled(fetches)
+      .then((results) => {
+        document.body.appendChild(createTable("main"));
+        let infoTitle = document.getElementById('main').getElementsByTagName('thead')[0];
+        createTableHeader11(infoTitle.insertRow(),"Track Name","Category","Rank","Time","Record's Time","Difference","Character","Vehicle","Controller","Date","Duration");
+        let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
+        let category = 'Normal', count = 0;
+        for (let j=0;j<mainLB["leaderboards"].length;j++) {
+          let rNum = [], index = `${j}`;
+          let recordTime = mainLB["leaderboards"][index]["fastestTimeSimple"], //00:00.000
+          category = determineCategory(mainLB,recordTime,index,j);
+          if (category==="Slower-Glitch") {continue;} //prevent slow glitches from displaying
+
+          if (rNum = inTopTen(results[index]["value"]["ghosts"],playerID)) {
+            count++;
+            let row = myTable.insertRow();
+            let cell1 = row.insertCell(0),
+            cell2 = row.insertCell(1),
+            cell3 = row.insertCell(2),
+            cell4 = row.insertCell(3),
+            cell5 = row.insertCell(4),
+            cell6 = row.insertCell(5),
+            cell7 = row.insertCell(6),
+            cell8 = row.insertCell(7),
+            cell9 = row.insertCell(8),
+            cell10 = row.insertCell(9),
+            cell11 = row.insertCell(10);
+
+            cell1.innerHTML = mainLB["leaderboards"][index]["name"];
+            cell2.innerHTML = category;
+            cell3.innerHTML = rNum[0];
+            cell4.innerHTML = results[index]["value"]["ghosts"][`${rNum[1]}`]["finishTimeSimple"].slice(1); //removes initial 0
+            cell5.innerHTML = recordTime;
+            cell6.innerHTML = calculateDifference(results[index]["value"]["ghosts"]["0"]["finishTimeSimple"],results[index]["value"]["ghosts"][`${rNum[1]}`]["finishTimeSimple"]);
+            cell7.innerHTML = getCharacter(results[index]["value"]["ghosts"][`${rNum[1]}`]["driverId"]);
+            cell8.innerHTML = getVehicle(results[index]["value"]["ghosts"][`${rNum[1]}`]["vehicleId"]);
+            cell9.innerHTML = getController(results[index]["value"]["ghosts"][`${rNum[1]}`]["controller"]);
+            cell10.innerHTML = results[index]["value"]["ghosts"][`${rNum[1]}`]["dateSet"].slice(0,10);
+            cell11.innerHTML = getRecordDuration(results[index]["value"]["ghosts"][`${rNum[1]}`]["dateSet"]);
+          }
+        }
+        document.body.appendChild(createHeaderTwo(`Total Top 10 Times: ${count}`));
+      })
+      .catch((err) => {
+        console.log(err);
+        console.log("Failed Fetching Main Leaderboard or another Fatal Error");
+    });
+  })})
+}
+
+/** checks if playerId is in top 10
+ * @param {Array} dataset 
+ * @param {string} id 
+ * @returns [lb rank,index] */
+function inTopTen(dataset,id) {
+  let count = 0; //keeps track of unique players in top 10, breaks if more than 10
+  for (let i=0;i<dataset.length;i++) {
+    if (dataset[i]["playersFastest"]) {count++;}
+    if (count>10) {break;}
+    if (dataset[i]["playerId"]===id) {return [count,i];}
+  }
+  return false;
+}
+
+/** creates large table header, takes a row and 11 strings */
+function createTableHeader11(row,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) {
+  let cellt1 = row.insertCell(0),
+  cellt2 = row.insertCell(1),
+  cellt3 = row.insertCell(2),
+  cellt4 = row.insertCell(3),
+  cellt5 = row.insertCell(4),
+  cellt6 = row.insertCell(5),
+  cellt7 = row.insertCell(6),
+  cellt8 = row.insertCell(7),
+  cellt9 = row.insertCell(8),
+  cellt10 = row.insertCell(9),
+  cellt11 = row.insertCell(10);
+  cellt1.innerHTML=t1;
+  cellt2.innerHTML=t2;
+  cellt3.innerHTML=t3;
+  cellt4.innerHTML=t4;
+  cellt5.innerHTML=t5;
+  cellt6.innerHTML=t6;
+  cellt7.innerHTML=t7;
+  cellt8.innerHTML=t8;
+  cellt9.innerHTML=t9;
+  cellt10.innerHTML=t10;
+  cellt11.innerHTML=t11;
+}
+
+/** two strings style XX:XX.XXX
+ * @param {string} recordTime 
+ * @param {string} nonRecordTime 
+ * @returns differences between record and time, can be 00:00.000 */
+function calculateDifference(recordTime,nonRecordTime) {
+  let remainder = 0;
+  let milliseconds = parseInt(nonRecordTime.slice(6)) - parseInt(recordTime.slice(6));
+  if (milliseconds<0) {
+    milliseconds = 1000 - Math.abs(milliseconds);
+    remainder=1;
+  }
+  if (milliseconds<100 && milliseconds>10) {
+    milliseconds = "0"+milliseconds;
+  }
+  else if (milliseconds<10) {
+    milliseconds = "00"+milliseconds;
+  }
+  else if (!milliseconds) {
+    milliseconds = "000";
+  }
+
+  let seconds = parseInt(nonRecordTime.slice(3,5)) - (parseInt(recordTime.slice(3,5)) + remainder);
+  remainder=0;
+  if (seconds<0) {
+    seconds = 60 - Math.abs(seconds);
+    remainder=1;
+  }
+  if (seconds<10 && seconds>0) {
+    seconds = "0"+seconds;
+  }
+  else if (!seconds) {
+    seconds = "00";
+  }
+
+  let minutes = parseInt(nonRecordTime.slice(0,2)) - (parseInt(recordTime.slice(0,2)) + remainder);
+  if (minutes<0) {
+    minutes = Math.abs(minutes);
+  }
+  if (minutes+":"+seconds+"."+milliseconds==="0:00.000") {return "Is BKT";}
+  return "+"+minutes+":"+seconds+"."+milliseconds;
+}
