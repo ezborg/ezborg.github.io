@@ -1,7 +1,15 @@
-const baseURL = "https://tt.chadsoft.co.uk", urlList = [], noShortcutCategoriyIDs = [2,6], //must use https://
+const baseURL = "https://tt.chadsoft.co.uk", noShortcutCategoryIDs = [2,6], //must use https://
 shortcutCategories = ["GCN DK Mountain","Incendia Castle"],
-slowCategories = ["N64 Bowser's Castle","Mushroom Gorge","GCN Mario Circuit","Toad's Factory","DS Desert Hills"];
+slowCategories = ["N64 Bowser's Castle","Mushroom Gorge","GCN Mario Circuit","Toad's Factory","DS Desert Hills"],
+largeCategories = ["GCN Baby Park","Jungle Jamble","Undiscovered Offlimit","Wetland Woods"];
 //arrays for determining categories for edge cases
+
+let urlList = [];
+const leaderboardsURLS = {
+  '150C': 'https://tt.chadsoft.co.uk/ctgp-leaderboards.json',
+  '200C': 'https://tt.chadsoft.co.uk/ctgp-leaderboards-200cc.json',
+  '200N': 'https://tt.chadsoft.co.uk/original-track-leaderboards-200cc.json'
+}
 
 function loadLeaderboard(load) {
   buildWebpage()
@@ -129,12 +137,99 @@ function loadLeaderboard(load) {
       displayBar("years",yearSplit[0],yearSplit[1]); //bar charts
       displayBar("dates",getMonths(allDates),["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"]);
       createRedirect();
+      urlList = [];
   })
     .catch((err) => {
       console.log(err);
       console.log("Failed Fetching Main Leaderboard or another Fatal Error");
   });
 })}) //tag closures from original fetch statement
+}
+
+function topsByPID() {
+  let ctgp150 = document.getElementById("150CTGP"), ctgp200 = document.getElementById("200CTGP"),
+  nin200 = document.getElementById("200NIN"), playerID = document.getElementById("playerID"),
+  load = "https://tt.chadsoft.co.uk/original-track-leaderboards-200cc.json",
+  uniqueCheck = onlyOneCheckmark(ctgp150,ctgp200,nin200);
+
+  const element = document.getElementById("main");
+  const element2 = document.getElementsByTagName("h2");
+  if (element) {
+    element.remove();
+    element2[0].remove();
+  }
+
+  if (uniqueCheck && playerID.value.length===16) {
+    load = leaderboardsURLS[uniqueCheck];
+  }
+  else {
+    alert("Need to choose a leaderboard or too many leaderboards chosen or invalid playerID!");
+    console.log("fail");
+    return;
+  }
+
+  fetch(load).then(mainRes => {mainRes.json().then(mainLB =>{this.mainLB = mainLB;
+
+    for (let i=0;i<mainLB["leaderboards"].length;i++) {
+      //try to limit ghosts fetched to speed up process
+      if (largeCategories.includes(mainLB["leaderboards"][`${i}`]["name"])) {
+        urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=200');
+      }
+      else {
+        urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=100');
+      }
+    }
+    let fetches = urlList.map(url => fetch(url).then(res => res.json()));
+
+    Promise.allSettled(fetches)
+      .then((results) => {
+        document.body.appendChild(createTable("main"));
+        let infoTitle = document.getElementById('main').getElementsByTagName('thead')[0];
+        createTableHeader11(infoTitle.insertRow(),"Track Name","Category","Rank","Time","Record's Time","Difference","Character","Vehicle","Controller","Date","Duration");
+        let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
+        let category = 'Normal', count = 0;
+        for (let j=0;j<mainLB["leaderboards"].length;j++) {
+          let rNum = [], index = `${j}`;
+          let recordTime = mainLB["leaderboards"][index]["fastestTimeSimple"], //00:00.000
+          category = determineCategory(mainLB,recordTime,index,j);
+          if (category==="Slower-Glitch") {continue;} //prevent slow glitches from displaying
+
+          if (rNum = inTopTen(results[index]["value"]["ghosts"],playerID.value)) {
+            count++;
+            let row = myTable.insertRow();
+            let cell1 = row.insertCell(0),
+            cell2 = row.insertCell(1),
+            cell3 = row.insertCell(2),
+            cell4 = row.insertCell(3),
+            cell5 = row.insertCell(4),
+            cell6 = row.insertCell(5),
+            cell7 = row.insertCell(6),
+            cell8 = row.insertCell(7),
+            cell9 = row.insertCell(8),
+            cell10 = row.insertCell(9),
+            cell11 = row.insertCell(10);
+
+            cell1.innerHTML = mainLB["leaderboards"][index]["name"];
+            cell2.innerHTML = category;
+            cell3.innerHTML = rNum[0];
+            cell4.innerHTML = results[index]["value"]["ghosts"][`${rNum[1]}`]["finishTimeSimple"].slice(1); //removes initial 0
+            cell5.innerHTML = recordTime;
+            cell6.innerHTML = calculateDifference(results[index]["value"]["ghosts"]["0"]["finishTimeSimple"],results[index]["value"]["ghosts"][`${rNum[1]}`]["finishTimeSimple"]);
+            cell7.innerHTML = getCharacter(results[index]["value"]["ghosts"][`${rNum[1]}`]["driverId"]);
+            cell8.innerHTML = getVehicle(results[index]["value"]["ghosts"][`${rNum[1]}`]["vehicleId"]);
+            cell9.innerHTML = getController(results[index]["value"]["ghosts"][`${rNum[1]}`]["controller"]);
+            cell10.innerHTML = results[index]["value"]["ghosts"][`${rNum[1]}`]["dateSet"].slice(0,10);
+            cell11.innerHTML = getRecordDuration(results[index]["value"]["ghosts"][`${rNum[1]}`]["dateSet"]);
+          }
+        }
+        document.body.appendChild(createHeaderTwo(`Total Top 10 Times: ${count}`));
+        urlList = [];
+      })
+      .catch((err) => {
+        console.log(err);
+        console.log("Failed Fetching Main Leaderboard or another Fatal Error");
+    });
+  })}) //tag closures from original fetch statement
 }
 
 
@@ -331,6 +426,32 @@ function createTableChartDiv(index) {
   return div;
 }
 
+/** creates large table header, takes a row and 11 strings */
+function createTableHeader11(row,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) {
+  let cellt1 = row.insertCell(0),
+  cellt2 = row.insertCell(1),
+  cellt3 = row.insertCell(2),
+  cellt4 = row.insertCell(3),
+  cellt5 = row.insertCell(4),
+  cellt6 = row.insertCell(5),
+  cellt7 = row.insertCell(6),
+  cellt8 = row.insertCell(7),
+  cellt9 = row.insertCell(8),
+  cellt10 = row.insertCell(9),
+  cellt11 = row.insertCell(10);
+  cellt1.innerHTML=t1;
+  cellt2.innerHTML=t2;
+  cellt3.innerHTML=t3;
+  cellt4.innerHTML=t4;
+  cellt5.innerHTML=t5;
+  cellt6.innerHTML=t6;
+  cellt7.innerHTML=t7;
+  cellt8.innerHTML=t8;
+  cellt9.innerHTML=t9;
+  cellt10.innerHTML=t10;
+  cellt11.innerHTML=t11;
+}
+
 
 /*****************************************************************************/
 /*                              Helper Functions                             */
@@ -433,6 +554,76 @@ function getMonthBundleByYear(dataset,year) {
     }
   }
   return {name: year,data: months};
+}
+
+/** checks if playerId is in top 10
+ * @param {Array} dataset 
+ * @param {string} id 
+ * @returns [lb rank,index] */
+function inTopTen(dataset,id) {
+  let count = 0; //keeps track of unique players in top 10, breaks if more than 10
+  const str = id.toUpperCase();
+  for (let i=0;i<dataset.length;i++) {
+    if (dataset[i]["playersFastest"]) {count++;}
+    if (count>10) {break;}
+    if (dataset[i]["playerId"]===str) {return [count,i];}
+  }
+  return false;
+}
+
+/** check if only 1 checkbox is checked and which one
+ * @param {checkbox} c1 
+ * @param {checkbox} c2 
+ * @param {checkbox} c3 
+ * @returns string key for URL or false */
+function onlyOneCheckmark(c1,c2,c3) {
+  if (c1.checked == true) {
+    if (c2.checked || c3.checked) {return false;}
+    return "150C";
+  }
+  if (c2.checked == true) {
+    if (c1.checked || c3.checked) {return false;}
+    return "200C";
+  }
+  if (c3.checked == true) {
+    if (c2.checked || c1.checked) {return false;}
+    return "200N";
+  }
+}
+
+/** two strings style XX:XX.XXX
+ * @param {string} recordTime 
+ * @param {string} nonRecordTime 
+ * @returns differences between record and time, can be 00:00.000 */
+function calculateDifference(recordTime,nonRecordTime) {
+  let milliseconds = parseInt(nonRecordTime.slice(6)) - parseInt(recordTime.slice(6)),
+  remainder = 0;
+  if (milliseconds<0) {
+    milliseconds = 1000 - Math.abs(milliseconds);
+    remainder=1;
+  }
+  if (milliseconds<100 && milliseconds>10) {milliseconds = "0"+milliseconds;}
+
+  else if (milliseconds<10) {milliseconds = "00"+milliseconds;}
+
+  else if (!milliseconds) {milliseconds = "000";}
+
+  let seconds = parseInt(nonRecordTime.slice(3,5)) - (parseInt(recordTime.slice(3,5)) + remainder);
+  remainder=0;
+  if (seconds<0) {
+    seconds = 60 - Math.abs(seconds);
+    remainder=1;
+  }
+  if (seconds<10 && seconds>0) {seconds = "0"+seconds;}
+
+  else if (!seconds) {seconds = "00";}
+
+  let minutes = parseInt(nonRecordTime.slice(0,2)) - (parseInt(recordTime.slice(0,2)) + remainder);
+
+  if (minutes<0) {minutes = Math.abs(minutes);}
+
+  if (minutes+":"+seconds+"."+milliseconds==="0:00.000") {return "Is BKT";}
+  return "+"+minutes+":"+seconds+"."+milliseconds;
 }
 
 /** creates pie chart
@@ -636,7 +827,7 @@ function determineCategory(mainLB,recordTime,index,j) {
     if (isSlowGlitch(recordTime,mainLB["leaderboards"][`${j-1}`]["fastestTimeSimple"])) {category = "Slower-Glitch";}
 
     try {
-      if (noShortcutCategoriyIDs.includes(mainLB["leaderboards"][index]["categoryId"])) {category = "No-Shortcut";}
+      if (noShortcutCategoryIDs.includes(mainLB["leaderboards"][index]["categoryId"])) {category = "No-Shortcut";}
     }
     catch(err) {console.log("Error handled: categoryId not present");}
 
@@ -930,149 +1121,3 @@ function getPlayerIDAndRegion(x) {
     case '2240C482ADD7E0D3': case '2CC8A5568F7A106B': case '8A1F856DCE285FEF': return ["Scorpi","images/GB.png"];
     default: return ["Unknown","images/unknown.png"];
 }}
-
-
-/*****************************************************************************/
-/*                         Personal Top 10 Funcs                             */
-/*****************************************************************************/
-
-
-function topsByPID(load,playerID) {
-  fetch(load).then(mainRes => {mainRes.json().then(mainLB =>{this.mainLB = mainLB;
-
-    for (let i=0;i<mainLB["leaderboards"].length;i++) {
-      urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=100');
-    }
-    let fetches = urlList.map(url => fetch(url).then(res => res.json()));
-
-    Promise.allSettled(fetches)
-      .then((results) => {
-        document.body.appendChild(createTable("main"));
-        let infoTitle = document.getElementById('main').getElementsByTagName('thead')[0];
-        createTableHeader11(infoTitle.insertRow(),"Track Name","Category","Rank","Time","Record's Time","Difference","Character","Vehicle","Controller","Date","Duration");
-        let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
-        let category = 'Normal', count = 0;
-        for (let j=0;j<mainLB["leaderboards"].length;j++) {
-          let rNum = [], index = `${j}`;
-          let recordTime = mainLB["leaderboards"][index]["fastestTimeSimple"], //00:00.000
-          category = determineCategory(mainLB,recordTime,index,j);
-          if (category==="Slower-Glitch") {continue;} //prevent slow glitches from displaying
-
-          if (rNum = inTopTen(results[index]["value"]["ghosts"],playerID)) {
-            count++;
-            let row = myTable.insertRow();
-            let cell1 = row.insertCell(0),
-            cell2 = row.insertCell(1),
-            cell3 = row.insertCell(2),
-            cell4 = row.insertCell(3),
-            cell5 = row.insertCell(4),
-            cell6 = row.insertCell(5),
-            cell7 = row.insertCell(6),
-            cell8 = row.insertCell(7),
-            cell9 = row.insertCell(8),
-            cell10 = row.insertCell(9),
-            cell11 = row.insertCell(10);
-
-            cell1.innerHTML = mainLB["leaderboards"][index]["name"];
-            cell2.innerHTML = category;
-            cell3.innerHTML = rNum[0];
-            cell4.innerHTML = results[index]["value"]["ghosts"][`${rNum[1]}`]["finishTimeSimple"].slice(1); //removes initial 0
-            cell5.innerHTML = recordTime;
-            cell6.innerHTML = calculateDifference(results[index]["value"]["ghosts"]["0"]["finishTimeSimple"],results[index]["value"]["ghosts"][`${rNum[1]}`]["finishTimeSimple"]);
-            cell7.innerHTML = getCharacter(results[index]["value"]["ghosts"][`${rNum[1]}`]["driverId"]);
-            cell8.innerHTML = getVehicle(results[index]["value"]["ghosts"][`${rNum[1]}`]["vehicleId"]);
-            cell9.innerHTML = getController(results[index]["value"]["ghosts"][`${rNum[1]}`]["controller"]);
-            cell10.innerHTML = results[index]["value"]["ghosts"][`${rNum[1]}`]["dateSet"].slice(0,10);
-            cell11.innerHTML = getRecordDuration(results[index]["value"]["ghosts"][`${rNum[1]}`]["dateSet"]);
-          }
-        }
-        document.body.appendChild(createHeaderTwo(`Total Top 10 Times: ${count}`));
-      })
-      .catch((err) => {
-        console.log(err);
-        console.log("Failed Fetching Main Leaderboard or another Fatal Error");
-    });
-  })})
-}
-
-/** checks if playerId is in top 10
- * @param {Array} dataset 
- * @param {string} id 
- * @returns [lb rank,index] */
-function inTopTen(dataset,id) {
-  let count = 0; //keeps track of unique players in top 10, breaks if more than 10
-  for (let i=0;i<dataset.length;i++) {
-    if (dataset[i]["playersFastest"]) {count++;}
-    if (count>10) {break;}
-    if (dataset[i]["playerId"]===id) {return [count,i];}
-  }
-  return false;
-}
-
-/** creates large table header, takes a row and 11 strings */
-function createTableHeader11(row,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) {
-  let cellt1 = row.insertCell(0),
-  cellt2 = row.insertCell(1),
-  cellt3 = row.insertCell(2),
-  cellt4 = row.insertCell(3),
-  cellt5 = row.insertCell(4),
-  cellt6 = row.insertCell(5),
-  cellt7 = row.insertCell(6),
-  cellt8 = row.insertCell(7),
-  cellt9 = row.insertCell(8),
-  cellt10 = row.insertCell(9),
-  cellt11 = row.insertCell(10);
-  cellt1.innerHTML=t1;
-  cellt2.innerHTML=t2;
-  cellt3.innerHTML=t3;
-  cellt4.innerHTML=t4;
-  cellt5.innerHTML=t5;
-  cellt6.innerHTML=t6;
-  cellt7.innerHTML=t7;
-  cellt8.innerHTML=t8;
-  cellt9.innerHTML=t9;
-  cellt10.innerHTML=t10;
-  cellt11.innerHTML=t11;
-}
-
-/** two strings style XX:XX.XXX
- * @param {string} recordTime 
- * @param {string} nonRecordTime 
- * @returns differences between record and time, can be 00:00.000 */
-function calculateDifference(recordTime,nonRecordTime) {
-  let remainder = 0;
-  let milliseconds = parseInt(nonRecordTime.slice(6)) - parseInt(recordTime.slice(6));
-  if (milliseconds<0) {
-    milliseconds = 1000 - Math.abs(milliseconds);
-    remainder=1;
-  }
-  if (milliseconds<100 && milliseconds>10) {
-    milliseconds = "0"+milliseconds;
-  }
-  else if (milliseconds<10) {
-    milliseconds = "00"+milliseconds;
-  }
-  else if (!milliseconds) {
-    milliseconds = "000";
-  }
-
-  let seconds = parseInt(nonRecordTime.slice(3,5)) - (parseInt(recordTime.slice(3,5)) + remainder);
-  remainder=0;
-  if (seconds<0) {
-    seconds = 60 - Math.abs(seconds);
-    remainder=1;
-  }
-  if (seconds<10 && seconds>0) {
-    seconds = "0"+seconds;
-  }
-  else if (!seconds) {
-    seconds = "00";
-  }
-
-  let minutes = parseInt(nonRecordTime.slice(0,2)) - (parseInt(recordTime.slice(0,2)) + remainder);
-  if (minutes<0) {
-    minutes = Math.abs(minutes);
-  }
-  if (minutes+":"+seconds+"."+milliseconds==="0:00.000") {return "Is BKT";}
-  return "+"+minutes+":"+seconds+"."+milliseconds;
-}

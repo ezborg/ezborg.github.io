@@ -4,33 +4,40 @@
         <meta charset="utf-8">
         <meta http-equiv="X-UA-Compatible" content="IE=edge">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
-        <meta name="keywords" content="Sardine,MKW,BKT,custom,Stats">
+        <meta name="keywords" content="Sardine,MKW,tops,custom,Stats">
         <meta name="author" content="Sardine">
-        <meta name="description" content="Sardine Homepage">
-        <title>Sardine Site HomePage</title>
+        <meta name="description" content="Personal Top10 counts">
+        <title>Check your tops</title>
         <link href="styles.css" rel="stylesheet" type="text/css">
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+        <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
         <script src="scripts.js"></script>
     </head>
-    <!--
-    onload="topsByPID('https://tt.chadsoft.co.uk//ctgp-leaderboards.json','365CE091FB3C78BA')"
-    -->
     <body>
-        <h1>Display your top 10 times</h1>
-        <p>A table will display your top 10 times in about minute or two.</p>
+        <header>
+            <h1> Display your top 10 times </h1>
+            <nav>
+                <a href="index.html">Home</a> -------
+                <a href="records.html">150cc CTGP Records</a> -------
+                <a href="recordstwo.html">200cc CTGP Records</a> -------
+                <a href="recordsnin.html">200cc Nintendo Records</a>
+            </nav>
+        </header>
+        <p> A table will display your top 10 times in about minute or two. Only one leaderboard can be chosen at a time. 
+            Only one playerID may be checked at a time. Player ID will be 16 characters consisting of numbers and letters.
+            To swap leaderboards mark the checkmark of the desired leaderboard and unmark the currently displayed one.
+            PlayerID is not case sensitive. You may have to wait again as new leaderboards are accessed. </p>
         <label for="playerID">Copy and paste your player ID here:</label><br>
         <input type="text" id="playerID" name="playerID"><br>
         <input type="button" onclick="topsByPID()" value="Search"><br>
 
-        <a href="https://www.chadsoft.co.uk/time-trials/players.html">Don't know player ID?</a><br>
+        <a href="https://www.chadsoft.co.uk/time-trials/players.html"> Don't know player ID? </a><br>
         <image src="images/playerID.png" alt="playerPage" height="200"><br>
-        <p>Choose your leaderboard (Only one at a time)</p>
+        <p> Choose your leaderboard (Only one at a time) </p>
         <label for="150CTGP">150CTGP:</label>
         <input type="checkbox" id="150CTGP" name="150CTGP" value="150CTGP">
-
         <label for="200CTGP">200CTGP:</label>
         <input type="checkbox" id="200CTGP" name="200CTGP" value="200CTGP">
-
         <label for="200NIN">200NIN:</label>
         <input type="checkbox" id="200NIN" name="200NIN" value="200NIN">
     </body>
