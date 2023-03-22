@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en-US">
+    <head>
+        <meta charset="utf-8">
+        <meta http-equiv="X-UA-Compatible" content="IE=edge">
+        <meta name="viewport" content="width=device-width, initial-scale=1.0">
+        <title>Fancify Shamcify</title>
+        <link href="/styles.css" rel="stylesheet" type="text/css">
+        <script src="fancifymytext.js"></script>
+    </head>
+    <body>
+        <h1>Fancify my Text</h1>
+        <label for="text">Text</label>
+		<fieldset name="text">
+			<textarea id="textarea" rows="4" cols="30"></textarea>
+		</fieldset>
+		<label for="btn">Fancify</label>
+		<fieldset name="btn">
+			<button name="btn" onclick="makeBigger()">Bigger!</button>
+			<label for="radio">FancyShmancy</label>
+			<input id="fancy" type="radio" name="radio" value="" onchange="makeFancy()">
+			<label for="radio">BoringBetty</label>
+			<input id="boring" type="radio" name="radio" value="" onchange="makeBoring()" checked="checked">
+			<button onclick="moo()">Moo</button>
+		</fieldset>
+    </body>
+</html>

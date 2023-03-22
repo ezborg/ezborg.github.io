@@ -25,8 +25,9 @@
         </header>
         <p> A table will display your top 10 times in about minute or two. Only one leaderboard can be chosen at a time. 
             Only one playerID may be checked at a time. Player ID will be 16 characters consisting of numbers and letters.
+            Player ID is not case sensitive.
             To swap leaderboards mark the checkmark of the desired leaderboard and unmark the currently displayed one.
-            PlayerID is not case sensitive. You may have to wait again as new leaderboards are accessed. </p>
+            You may have to wait again as new leaderboards are accessed. </p>
         <label for="playerID">Copy and paste your player ID here:</label><br>
         <input type="text" id="playerID" name="playerID"><br>
         <input type="button" onclick="topsByPID()" value="Search"><br>
@@ -34,11 +35,19 @@
         <a href="https://www.chadsoft.co.uk/time-trials/players.html"> Don't know player ID? </a><br>
         <image src="images/playerID.png" alt="playerPage" height="200"><br>
         <p> Choose your leaderboard (Only one at a time) </p>
-        <label for="150CTGP">150CTGP:</label>
-        <input type="checkbox" id="150CTGP" name="150CTGP" value="150CTGP">
-        <label for="200CTGP">200CTGP:</label>
-        <input type="checkbox" id="200CTGP" name="200CTGP" value="200CTGP">
-        <label for="200NIN">200NIN:</label>
-        <input type="checkbox" id="200NIN" name="200NIN" value="200NIN">
+        <div class="triple-grid">
+            <div>
+                <label for="150CTGP">150CTGP:</label>
+                <input type="checkbox" id="150CTGP" name="150CTGP" value="150CTGP">
+            </div>
+            <div>
+                <label for="200CTGP">200CTGP:</label>
+                <input type="checkbox" id="200CTGP" name="200CTGP" value="200CTGP">
+            </div>
+            <div>
+                <label for="200NIN">200NIN:</label>
+                <input type="checkbox" id="200NIN" name="200NIN" value="200NIN">
+            </div>
+        </div>
     </body>
 </html>
