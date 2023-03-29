@@ -528,7 +528,8 @@ function splitTwoColumn(dataset) {
  * @param {Number} lowIndex 
  * @returns index of lowest alphabet and same count */
 function findLowestAlphabetical(dataset,index,lowIndex) {
-  if (dataset[index][1]===dataset[index+1][1]) {
+  if (index+1===dataset.length) {return lowIndex;}
+  else if (dataset[index][1]===dataset[index+1][1]) {
     if (dataset[lowIndex][0]>dataset[index+1][0]) {
       lowIndex = index+1;
     }
@@ -1113,6 +1114,8 @@ function getPlayerIDAndRegion(x) {
     case '7C625EF944C73FEA': return ["Emiddle","images/PH.png"];
     case '8B2AA1EB59B08E78': return ["Neptune","images/US.png"];
     case 'C924039608AEDE35': return ["RyanUK","images/GB.png"];
+    case 'B9AB2EC621E671DB': return ["Will","images/US.png"];
+    case 'D1596B68ED3EE3CA': return ["Jcool","images/US.png"];
     case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
     case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];//using stubbz old wii
