@@ -725,6 +725,11 @@ function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
     let cell1 = dataRow.insertCell(0), cell2 = dataRow.insertCell(1), cell3 = dataRow.insertCell(2);
     if (dataset[playerIndex][1]==dataset[playerIndex+1][1]) {
       playerIndex = findLowestAlphabetical(dataset,playerIndex,playerIndex); //alphabetically sorting
+      if (dataset[playerIndex][0]==="Unknown") {
+        dataset.splice(playerIndex,1);
+        dataset.push([['Unknown',0,"images/unknown.png"]]);
+        playerIndex = findLowestAlphabetical(dataset,0,0);
+      }
     }
     cell1.innerHTML = dataset[playerIndex][0];
     cell2.innerHTML = dataset[playerIndex][1];
@@ -1038,7 +1043,6 @@ function getPlayerIDAndRegion(x) {
     case '95C6241CCE24A853': return ["Batcake","images/US.png"];
     case '890E6F8CCB86DA53': return ["Reece","images/US.png"];
     case '9E0D6D2FBC109C35': return ["Flurry","images/US.png"];
-    case '855843F84CCF6FEB': return ["Laty","images/US.png"];
     case 'BA141C33DD30F62B': return ["Jσikε","images/US.png"];
     case '611AF70B6321DE01': return ["Zane","images/US.png"];
     case '2E9390843D29256E': return ["Ivan","images/US.png"];
@@ -1116,6 +1120,7 @@ function getPlayerIDAndRegion(x) {
     case 'C924039608AEDE35': return ["RyanUK","images/GB.png"];
     case 'B9AB2EC621E671DB': return ["Will","images/US.png"];
     case 'D1596B68ED3EE3CA': return ["Jcool","images/US.png"];
+    case '855843F84CCF6FEB': case 'CA214F0DB57DB789': return ["Laty","images/US.png"];
     case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
     case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];//using stubbz old wii

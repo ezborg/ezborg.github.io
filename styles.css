@@ -45,15 +45,6 @@ body {
     font-size: 20px;
 }
 
-footer {
-    position: fixed;
-    left: 0px;
-    bottom: 0px;
-    width: 100%;
-    background-color: grey;
-    color: black;
-}
-
 .grid-container {
     display: inline-grid;
     grid-template-columns: auto auto;column-gap: 150px;
