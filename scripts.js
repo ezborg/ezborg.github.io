@@ -142,6 +142,13 @@ function loadLeaderboard(load) {
     .catch((err) => {
       console.log(err);
       console.log("Failed Fetching Main Leaderboard or another Fatal Error");
+      const element = document.getElementById("main");
+      if (element) {
+        alert("Main Leaderboard has loaded but an internal error has happened.")
+      }
+      else {
+        alert("Main database hasn't responded, chadsoft server is most likely down or running slowly. Try Again Later.")
+      }
   });
 })}) //tag closures from original fetch statement
 }
@@ -228,6 +235,12 @@ function topsByPID() {
       .catch((err) => {
         console.log(err);
         console.log("Failed Fetching Main Leaderboard or another Fatal Error");
+        if (element) {
+          alert("An internal error has happened.")
+        }
+        else {
+          alert("Main database hasn't responded, chadsoft server is most likely down or running slowly. Try Again Later.")
+        }
     });
   })}) //tag closures from original fetch statement
 }
@@ -841,6 +854,9 @@ function determineCategory(mainLB,recordTime,index,j) {
 
     if (j>1 && mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-2}`]["name"] && 
       slowCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Normal";}
+
+    if (j>1 && mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-2}`]["name"] && 
+      mainLB["leaderboards"][index]["name"]==="Coconut Mall") {category = "Slower-Glitch";}
   } 
 
   else if (j<mainLB["leaderboards"].length-1 && mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j+1}`]["name"]) {
@@ -1055,7 +1071,6 @@ function getPlayerIDAndRegion(x) {
     case 'CCD7533B6AC242ED': return ["Supreme","images/US.png"];
     case 'B2AD3F4AE4DDE118': return ["Dxrk","images/DE.png"];
     case '2B5181110E294547': return ["Kit","images/CA.png"];
-    case '22475C923D0935C9': return ["Sardine","images/US.png"];
     case '61B745D2CE98F5E0': return ["David","images/GB.png"];
     case '7ED82242442D6B1A': return ["64","images/US.png"];
     case '07C2E13F252B1E34': return ["xWill","images/US.png"];
@@ -1120,11 +1135,14 @@ function getPlayerIDAndRegion(x) {
     case 'C924039608AEDE35': return ["RyanUK","images/GB.png"];
     case 'B9AB2EC621E671DB': return ["Will","images/US.png"];
     case 'D1596B68ED3EE3CA': return ["Jcool","images/US.png"];
+    case '28104DE1ED018629': return ["Yahoo","images/JP.png"];
+    case 'E1D1D597940401C7': return ["Empex","images/US.png"];
     case '855843F84CCF6FEB': case 'CA214F0DB57DB789': return ["Laty","images/US.png"];
     case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
     case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];//using stubbz old wii
     case '6C37FC09DD67E33B': case '271EC09BB2E937BB': return ["Bickbork","images/US.png"];
+    case '22475C923D0935C9': case '8DBC8088D4206570': return ["Sardine","images/US.png"];
     case '40B20BE4FD8CA88C': case 'AEEB0474F0DEABF8': case 'D8EEEF0F2872E83F': return ["καgυγα","images/JP.png"];
     case '2240C482ADD7E0D3': case '2CC8A5568F7A106B': case '8A1F856DCE285FEF': return ["Scorpi","images/GB.png"];
     default: return ["Unknown","images/unknown.png"];
