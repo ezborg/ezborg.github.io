@@ -1,8 +1,11 @@
 const baseURL = "https://tt.chadsoft.co.uk", noShortcutCategoryIDs = [2,6], //must use https://
 shortcutCategories = ["GCN DK Mountain","Incendia Castle"],
 slowCategories = ["N64 Bowser's Castle","Mushroom Gorge","GCN Mario Circuit","Toad's Factory","DS Desert Hills"],
-largeCategories = ["GCN Baby Park","Jungle Jamble","Undiscovered Offlimit","Wetland Woods"];
 //arrays for determining categories for edge cases
+largeCategories = ["GCN Baby Park","Jungle Jamble","Undiscovered Offlimit","Wetland Woods","Sunset Forest","White Garden",
+                    "Colour Circuit","GCN Mushroom Bridge","Fishdom Island","Kinoko Cave","Summer Starville"];
+//array to fetch more ghosts for top 10 LBs, category is large if top 10 ghosts are not within first 100 entries
+//must be manually inputed, ended last time at GCN RR, list based on total ghosts
 
 let urlList = [];
 const leaderboardsURLS = {
@@ -11,13 +14,49 @@ const leaderboardsURLS = {
   '200N': 'https://tt.chadsoft.co.uk/original-track-leaderboards-200cc.json'
 }
 
+class NameQuantityNode {
+
+  /** not all fields need to be filled
+   * @param {String} name 
+   * @param {Number} quantity usually 1
+   * @param {String} extra image string 
+   * @param {String} player only used for orderedDuration*/
+  constructor(name, quantity, image, player) {
+    this.name = name;
+    this.quantity = quantity;
+    this.image = image;
+    this.player = player;
+  }
+
+  /** adds 1 to the quantity value */
+  add() {
+    this.quantity++;
+  }
+
+  //getters
+  getName() {
+    return this.name;
+  }
+  getQuantity() {
+    return this.quantity;
+  }
+  getImage() {
+    return this.image;
+  }
+  getPlayer() {
+    return this.player;
+  }
+}
+
 function loadLeaderboard(load) {
   buildWebpage()
   fetch(load).then(mainRes => {mainRes.json().then(mainLB =>{this.mainLB = mainLB;
+
   /*for (let i=0;i<mainLB["leaderboards"].length;i++) {
     urlList.push(new URL(this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=1',baseURL));
   } //FUTURE if new params found: url.searchParams.set("limit",1) */
-  for (let i=0;i<mainLB["leaderboards"].length;i++) { //must use https://
+
+  for (let i=0;i<mainLB["leaderboards"].length;i++) {
     urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=1');
   }
   let fetches = urlList.map(url => fetch(url).then(res => res.json()));
@@ -30,21 +69,18 @@ function loadLeaderboard(load) {
       let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
       //create header row and init body row
 
-      let category = 'Normal', allDates = [], allYears = [["2017",0]],
-      playerTally = [['Unknown',0,"images/unknown.png"]], countryTally = [['Un',0,"images/unknown.png"]],
-      vehicleTally = [['Unknown',0]], characterTally = [['Unknown',0]], controllerTally = [['Unknown',0]],
-      glitchTally = [['Unknown',0,"images/unknown.png"]], noGlitchTally = [['Unknown',0,"images/unknown.png"]],
-      orderedDuration = [["Unknown",0,"Unknown","Unknown"]];
+      category = 'Normal', allDates = [], allYears = [], vehicleTally = [], characterTally = [], controllerTally = [],
+      playerTally = [], glitchTally = [], noGlitchTally = [], countryTally = [], orderedDuration = [];
       //declare category and arrays with a default value for html tables
 
       for (let j=0;j<mainLB["leaderboards"].length;j++) {
 
-        let index = `${j}`; //previous=`${j-1}`, doubleprevious=`${j-2}`, next=`${j+1}`, doublenext=`${j+2}`
+        let index = `${j}`;
         let recordTime = mainLB["leaderboards"][index]["fastestTimeSimple"], //00:00.000
         recordDate = mainLB["leaderboards"][index]["fastestTimeLastChange"].slice(0,10); //UTC Time Date
         duration = getRecordDuration(recordDate);
         category = determineCategory(mainLB,recordTime,index,j);
-        if (category==="Slower-Glitch") {continue;} //prevent slow glitches from displaying on leaderboard
+        if (category==="Slower-Glitch") {continue;} //prevent slow glitches or broken categories from displaying on leaderboard
 
         let row = myTable.insertRow();
         let cell1 = row.insertCell(0),
@@ -82,24 +118,47 @@ function loadLeaderboard(load) {
         currentController=getController(results[index]["value"]["ghosts"]["0"]["controller"]);
         //getting strings from switch case statements
 
-        allDates.push(recordDate);
-        orderedDuration.push([mainLB["leaderboards"][index]["name"]+": "+category,duration,recordDate,player[0]]);
-        if (toBeAdded = addToArray(player[0],playerTally)) {playerTally.push([player[0],1,player[1]])}
-        if (toBeAdded = addToArray(player[1].slice(7,9),countryTally)) {countryTally.push([player[1].slice(7,9),1,player[1]])}
-        if (toBeAdded = addToArray(currentVehicle,vehicleTally)) {vehicleTally.push([currentVehicle,1])}
-        if (toBeAdded = addToArray(currentCharacter,characterTally)) {characterTally.push([currentCharacter,1])}
-        if (toBeAdded = addToArray(recordDate.slice(0,4),allYears)) {allYears.push([recordDate.slice(0,4),1])}
-        if (category==="Glitch") {
-          if (toBeAdded = addToArray(player[0],glitchTally)) {glitchTally.push([player[0],1,player[1]])}
+        if (player[0]!="Unknown") {
+          //prevent unknown players from being added to player tables and nation table, ghost stats are still added
+          //will still be displayed for overall record table
+          if (toBeAdded = addToArray(player[0],playerTally)) {
+            playerTally.push(new NameQuantityNode(player[0],1,player[1]))
+          }
+          if (toBeAdded = addToArray(player[1].slice(7,9),countryTally)) {
+            countryTally.push(new NameQuantityNode(player[1].slice(7,9),1,player[1]))
+          }
+          if (category==="Glitch") {
+            if (toBeAdded = addToArray(player[0],glitchTally)) {glitchTally.push(new NameQuantityNode(player[0],1,player[1]))}
+          }
+          else {
+            if (toBeAdded = addToArray(player[0],noGlitchTally)) {noGlitchTally.push(new NameQuantityNode(player[0],1,player[1]))}
+          }
         }
         else {
-          if (toBeAdded = addToArray(player[0],noGlitchTally)) {noGlitchTally.push([player[0],1,player[1]])}
+          console.log("Missing player entry at: "+mainLB["leaderboards"][index]["name"]);
         }
+
+        allDates.push(recordDate);
+        orderedDuration.push(new NameQuantityNode(mainLB["leaderboards"][index]["name"]+": "+category,duration,recordDate,player[0]));
+        //these two are always pushed to
+
+        if (toBeAdded = addToArray(recordDate.slice(0,4),allYears)) {
+          allYears.push(new NameQuantityNode(recordDate.slice(0,4),1))
+        }
+        if (toBeAdded = addToArray(currentVehicle,vehicleTally)) {
+          vehicleTally.push(new NameQuantityNode(currentVehicle,1))
+        }
+        if (toBeAdded = addToArray(currentCharacter,characterTally)) {
+          characterTally.push(new NameQuantityNode(currentCharacter,1))
+        }
+
         if (currentController==="Gamecube" && results[index]["value"]["ghosts"]["0"]["usbGcnAdapterAttached"]) {
           currentController="USB-GCN"; //intercept USB-GCN before addToArray
         }
-        if (toBeAdded = addToArray(currentController,controllerTally)) {controllerTally.push([currentController,1])}
-        //add data to arrays
+        if (toBeAdded = addToArray(currentController,controllerTally)) {
+          controllerTally.push(new NameQuantityNode(currentController,1))
+        }
+        //add ghost data to arrays
 
         cell1.innerHTML = mainLB["leaderboards"][index]["name"];
         cell2.innerHTML = category;
@@ -114,9 +173,15 @@ function loadLeaderboard(load) {
         cell11.innerHTML = duration;
       }
 
-      orderedDuration.sort(sortByQ2); countryTally.sort(sortByQ2); vehicleTally.sort(sortByQ2); characterTally.sort(sortByQ2);
-      controllerTally.sort(sortByQ2); playerTally.sort(sortByQ2); glitchTally.sort(sortByQ2); noGlitchTally.sort(sortByQ2);
-      allYears.sort(sortByQ1); //numerically sorting 
+      //Begin Stats Section
+
+      orderedDuration.sort(sortNodeByQuantity);
+      countryTally.sort(sortNodeByQuantity); vehicleTally.sort(sortNodeByQuantity); characterTally.sort(sortNodeByQuantity);
+      controllerTally.sort(sortNodeByQuantity); playerTally.sort(sortNodeByQuantity); 
+      glitchTally.sort(sortNodeByQuantity); noGlitchTally.sort(sortNodeByQuantity);
+      allYears.sort(sortNodeByName);
+      //numerically sorting
+
       document.getElementById("totalCount").textContent=`Total Records: ${allDates.length}`;
 
       displayPie("vehicle",vehicleTally);
@@ -133,11 +198,11 @@ function loadLeaderboard(load) {
       displaySimpleTable("characterList",characterTally,"Character","Total");
       displaySimpleTable("controllerList",controllerTally,"Controller","Total"); //html tables
 
-      let yearSplit = splitTwoColumn(allYears);
+      let yearSplit = splitNameQuantity(allYears);
       displayBar("years",yearSplit[0],yearSplit[1]); //bar charts
       displayBar("dates",getMonths(allDates),["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"]);
       createRedirect();
-      urlList = [];
+      urlList = []; //unused for now, potentially useful if more interaction is added.
   })
     .catch((err) => {
       console.log(err);
@@ -159,6 +224,7 @@ function topsByPID() {
   load = "https://tt.chadsoft.co.uk/original-track-leaderboards-200cc.json",
   uniqueCheck = onlyOneCheckmark(ctgp150,ctgp200,nin200);
 
+  //check if a leaderboard is built and remove it
   const element = document.getElementById("main");
   const element2 = document.getElementsByTagName("h2");
   if (element) {
@@ -471,14 +537,14 @@ function createTableHeader11(row,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) {
 /*****************************************************************************/
 
 
-/** sorts nested array by its first element */
-function sortByQ1(a,b) {
-  return b[0] - a[0];
+/** sorts Node array by its name, used for years */
+function sortNodeByName(a,b) {
+  return b.getName() - a.getName();
 }
 
-/** sorts nested array by its second element */
-function sortByQ2(a,b) {
-  return b[1] - a[1];
+/** sorts Node array by its quantity element */
+function sortNodeByQuantity(a,b) {
+  return b.getQuantity() - a.getQuantity();
 }
 
 /** checks if default player mii was used
@@ -508,13 +574,14 @@ function getMonths(dataset) {
 }
 
 /** increments array element unless value isn't present and returns true/false to determine if to push in main
+ * could make arrays global and be able to push from this method
  * @param {string} input 
  * @param {Array} dataset 
  * @returns boolean */
 function addToArray(input,dataset) {
   for (let k=0;k<dataset.length;k++) {
-    if (input===dataset[k][0]) {
-      dataset[k][1]+=1;
+    if (input===dataset[k].getName()) {
+      dataset[k].add();
       return false;
     }
   }
@@ -523,13 +590,13 @@ function addToArray(input,dataset) {
 
 /** takes an array and returns another array with seperate arrays of the first two columns
  * @param {Array} dataset 
- * @returns array */
-function splitTwoColumn(dataset) {
+ * @returns array, first array is values, second is names*/
+function splitNameQuantity(dataset) {
   let one = [], two = [];
   for (let i=0;i<dataset.length;i++) {
-    if (dataset[i][1]>0) {
-      one.push(dataset[i][1]);
-      two.push(dataset[i][0]);
+    if (dataset[i].getQuantity()>0) {
+      one.push(dataset[i].getQuantity());
+      two.push(dataset[i].getName());
     }
   }
   return [one,two];
@@ -542,8 +609,8 @@ function splitTwoColumn(dataset) {
  * @returns index of lowest alphabet and same count */
 function findLowestAlphabetical(dataset,index,lowIndex) {
   if (index+1===dataset.length) {return lowIndex;}
-  else if (dataset[index][1]===dataset[index+1][1]) {
-    if (dataset[lowIndex][0]>dataset[index+1][0]) {
+  else if (dataset[index].getQuantity()===dataset[index+1].getQuantity()) {
+    if (dataset[lowIndex].getName()>dataset[index+1].getName()) {
       lowIndex = index+1;
     }
     return findLowestAlphabetical(dataset,index+1,lowIndex)
@@ -645,9 +712,9 @@ function calculateDifference(recordTime,nonRecordTime) {
  * @param {Array} dataset nested array */
 function displayPie(tableIndex,dataset) {
   let numbers = [], titles = [];
-  for (let i=0;i<dataset.length-1;i++) {
-    numbers.push(dataset[i][1]);
-    titles.push(dataset[i][0]);
+  for (let i=0;i<dataset.length;i++) {
+    numbers.push(dataset[i].getQuantity());
+    titles.push(dataset[i].getName());
   }
 
   let options = {
@@ -701,14 +768,17 @@ function displaySimpleTable(tableName,dataset,title1,title2) {
   let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
   let playerIndex = 0; originalLength = dataset.length;
 
-  for (let l=0;l<originalLength-1;l++) {
+  for (let l=0;l<originalLength;l++) {
     let dataRow = infoList.insertRow();
     let cell1 = dataRow.insertCell(0), cell2 = dataRow.insertCell(1);
-    if (dataset[playerIndex][1]==dataset[playerIndex+1][1]) {
+    if (dataset.length===1) {
+      playerIndex = 0;
+    }
+    else if (dataset[playerIndex].getQuantity()==dataset[playerIndex+1].getQuantity()) {
       playerIndex = findLowestAlphabetical(dataset,playerIndex,playerIndex); //alphabetically sorting
     }
-    cell1.innerHTML = dataset[playerIndex][0];
-    cell2.innerHTML = dataset[playerIndex][1];
+    cell1.innerHTML = dataset[playerIndex].getName();
+    cell2.innerHTML = dataset[playerIndex].getQuantity();
     dataset.splice(playerIndex,1); //remove displayed table element
     playerIndex = 0;
   }
@@ -733,20 +803,18 @@ function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
   let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
   let playerIndex = 0; originalLength = dataset.length;
 
-  for (let l=0;l<originalLength-1;l++) {
+  for (let l=0;l<originalLength;l++) {
     let dataRow = infoList.insertRow();
     let cell1 = dataRow.insertCell(0), cell2 = dataRow.insertCell(1), cell3 = dataRow.insertCell(2);
-    if (dataset[playerIndex][1]==dataset[playerIndex+1][1]) {
-      playerIndex = findLowestAlphabetical(dataset,playerIndex,playerIndex); //alphabetically sorting
-      if (dataset[playerIndex][0]==="Unknown") {
-        dataset.splice(playerIndex,1);
-        dataset.push([['Unknown',0,"images/unknown.png"]]);
-        playerIndex = findLowestAlphabetical(dataset,0,0);
-      }
+    if (dataset.length===1) {
+      playerIndex = 0;
     }
-    cell1.innerHTML = dataset[playerIndex][0];
-    cell2.innerHTML = dataset[playerIndex][1];
-    cell3.appendChild(createImage(dataset[playerIndex][2]));
+    else if (dataset[playerIndex].getQuantity()==dataset[playerIndex+1].getQuantity()) {
+      playerIndex = findLowestAlphabetical(dataset,playerIndex,playerIndex); //alphabetically sorting
+    }
+    cell1.innerHTML = dataset[playerIndex].getName();
+    cell2.innerHTML = dataset[playerIndex].getQuantity();
+    cell3.appendChild(createImage(dataset[playerIndex].getImage()));
     dataset.splice(playerIndex,1); //remove displayed table element
     playerIndex = 0;
   }
@@ -777,10 +845,10 @@ function displayTopTen(dataset) {
     cell4 = infoRow.insertCell(3),
     cell5 = infoRow.insertCell(4);
     cell1.innerHTML=`${q+1}`;
-    cell2.innerHTML=dataset[q][1];
-    cell3.innerHTML=dataset[q][0];
-    cell4.innerHTML=dataset[q][2];
-    cell5.innerHTML=dataset[q][3];
+    cell2.innerHTML=dataset[q].getQuantity();
+    cell3.innerHTML=dataset[q].getName();
+    cell4.innerHTML=dataset[q].getImage();
+    cell5.innerHTML=dataset[q].getPlayer();
   }
 }
 
@@ -1133,7 +1201,6 @@ function getPlayerIDAndRegion(x) {
     case '7C625EF944C73FEA': return ["Emiddle","images/PH.png"];
     case '8B2AA1EB59B08E78': return ["Neptune","images/US.png"];
     case 'C924039608AEDE35': return ["RyanUK","images/GB.png"];
-    case 'B9AB2EC621E671DB': return ["Will","images/US.png"];
     case 'D1596B68ED3EE3CA': return ["Jcool","images/US.png"];
     case '28104DE1ED018629': return ["Yahoo","images/JP.png"];
     case 'E1D1D597940401C7': return ["Empex","images/US.png"];
@@ -1142,6 +1209,7 @@ function getPlayerIDAndRegion(x) {
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
     case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];//using stubbz old wii
     case '6C37FC09DD67E33B': case '271EC09BB2E937BB': return ["Bickbork","images/US.png"];
+    case 'B9AB2EC621E671DB': case 'E659F91B99D78CA8': return ["Will","images/US.png"];
     case '22475C923D0935C9': case '8DBC8088D4206570': return ["Sardine","images/US.png"];
     case '40B20BE4FD8CA88C': case 'AEEB0474F0DEABF8': case 'D8EEEF0F2872E83F': return ["καgυγα","images/JP.png"];
     case '2240C482ADD7E0D3': case '2CC8A5568F7A106B': case '8A1F856DCE285FEF': return ["Scorpi","images/GB.png"];

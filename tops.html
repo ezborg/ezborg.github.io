@@ -6,8 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="keywords" content="Sardine,MKW,tops,custom,Stats">
         <meta name="author" content="Sardine">
-        <meta name="description" content="Personal Top10 counts">
-        <title>Check your tops</title>
+        <meta name="description" content="Personal Top10s">
+        <title>Check your CTGP Top 10 times</title>
         <link href="styles.css" rel="stylesheet" type="text/css">
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -24,10 +24,10 @@
             </nav>
         </header>
         <p> A table will display your top 10 times in about minute or two. Only one leaderboard can be chosen at a time. 
-            Only one playerID may be checked at a time. Player ID will be 16 characters consisting of numbers and letters.
-            Player ID is not case sensitive.
-            To swap leaderboards mark the checkmark of the desired leaderboard and unmark the currently displayed one.
-            You may have to wait again as new leaderboards are accessed. </p>
+            Only one Player ID may be checked at a time. 
+            Player ID is not case sensitive and will be 16 characters consisting of numbers and letters.
+            Slow categories are not included. </p>
+            
         <label for="playerID">Copy and paste your player ID here:</label><br>
         <input type="text" id="playerID" name="playerID"><br>
         <input type="button" onclick="topsByPID()" value="Search"><br>
@@ -37,15 +37,15 @@
         <p> Choose your leaderboard (Only one at a time) </p>
         <div class="triple-grid">
             <div>
-                <label for="150CTGP">150CTGP:</label>
+                <label for="150CTGP">150cc CTGP:</label>
                 <input type="checkbox" id="150CTGP" name="150CTGP" value="150CTGP">
             </div>
             <div>
-                <label for="200CTGP">200CTGP:</label>
+                <label for="200CTGP">200cc CTGP:</label>
                 <input type="checkbox" id="200CTGP" name="200CTGP" value="200CTGP">
             </div>
             <div>
-                <label for="200NIN">200NIN:</label>
+                <label for="200NIN">200cc Nintendo:</label>
                 <input type="checkbox" id="200NIN" name="200NIN" value="200NIN">
             </div>
         </div>
