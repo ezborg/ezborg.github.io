@@ -18,7 +18,7 @@ class NameQuantityNode {
 
   /** not all fields need to be filled
    * @param {String} name 
-   * @param {Number} quantity usually 1
+   * @param {Number} quantity usually 1 when initialized
    * @param {String} extra image string 
    * @param {String} player only used for orderedDuration*/
   constructor(name, quantity, image, player) {
@@ -71,7 +71,7 @@ function loadLeaderboard(load) {
 
       category = 'Normal', allDates = [], allYears = [], vehicleTally = [], characterTally = [], controllerTally = [],
       playerTally = [], glitchTally = [], noGlitchTally = [], countryTally = [], orderedDuration = [];
-      //declare category and arrays with a default value for html tables
+      //declare category and arrays
 
       for (let j=0;j<mainLB["leaderboards"].length;j++) {
 
@@ -96,7 +96,8 @@ function loadLeaderboard(load) {
         cell11 = row.insertCell(10);
         //One row and 11 columns for each track and category
 
-        if (results[index]["status"] === "rejected") { //display generic track info with main leaderboard if a track leaderboard fails
+        if (results[index]["status"] === "rejected") { 
+          //display generic track info with main leaderboard if a track leaderboard fails, restarts loop
           cell1.innerHTML = mainLB["leaderboards"][index]["name"];
           cell2.innerHTML = category;
           cell3.innerHTML = recordTime.slice(1);
@@ -180,7 +181,7 @@ function loadLeaderboard(load) {
       controllerTally.sort(sortNodeByQuantity); playerTally.sort(sortNodeByQuantity); 
       glitchTally.sort(sortNodeByQuantity); noGlitchTally.sort(sortNodeByQuantity);
       allYears.sort(sortNodeByName);
-      //numerically sorting
+      //numeric sorting
 
       document.getElementById("totalCount").textContent=`Total Records: ${allDates.length}`;
 
@@ -269,6 +270,7 @@ function topsByPID() {
 
           if (rNum = inTopTen(results[index]["value"]["ghosts"],playerID.value)) {
             count++;
+            let ghostLoc = rNum.getName(); //top 10 ghost index, string
             let row = myTable.insertRow();
             let cell1 = row.insertCell(0),
             cell2 = row.insertCell(1),
@@ -284,15 +286,15 @@ function topsByPID() {
 
             cell1.innerHTML = mainLB["leaderboards"][index]["name"];
             cell2.innerHTML = category;
-            cell3.innerHTML = rNum[0];
-            cell4.innerHTML = results[index]["value"]["ghosts"][`${rNum[1]}`]["finishTimeSimple"].slice(1); //removes initial 0
+            cell3.innerHTML = rNum.getQuantity(); //rank
+            cell4.innerHTML = results[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"].slice(1); //removes initial 0
             cell5.innerHTML = recordTime;
-            cell6.innerHTML = calculateDifference(results[index]["value"]["ghosts"]["0"]["finishTimeSimple"],results[index]["value"]["ghosts"][`${rNum[1]}`]["finishTimeSimple"]);
-            cell7.innerHTML = getCharacter(results[index]["value"]["ghosts"][`${rNum[1]}`]["driverId"]);
-            cell8.innerHTML = getVehicle(results[index]["value"]["ghosts"][`${rNum[1]}`]["vehicleId"]);
-            cell9.innerHTML = getController(results[index]["value"]["ghosts"][`${rNum[1]}`]["controller"]);
-            cell10.innerHTML = results[index]["value"]["ghosts"][`${rNum[1]}`]["dateSet"].slice(0,10);
-            cell11.innerHTML = getRecordDuration(results[index]["value"]["ghosts"][`${rNum[1]}`]["dateSet"]);
+            cell6.innerHTML = calculateDifference(results[index]["value"]["ghosts"]["0"]["finishTimeSimple"],results[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"]);
+            cell7.innerHTML = getCharacter(results[index]["value"]["ghosts"][ghostLoc]["driverId"]);
+            cell8.innerHTML = getVehicle(results[index]["value"]["ghosts"][ghostLoc]["vehicleId"]);
+            cell9.innerHTML = getController(results[index]["value"]["ghosts"][ghostLoc]["controller"]);
+            cell10.innerHTML = results[index]["value"]["ghosts"][ghostLoc]["dateSet"].slice(0,10);
+            cell11.innerHTML = getRecordDuration(results[index]["value"]["ghosts"][ghostLoc]["dateSet"]);
           }
         }
         document.body.appendChild(createHeaderTwo(`Total Top 10 Times: ${count}`));
@@ -647,7 +649,7 @@ function inTopTen(dataset,id) {
   for (let i=0;i<dataset.length;i++) {
     if (dataset[i]["playersFastest"]) {count++;}
     if (count>10) {break;}
-    if (dataset[i]["playerId"]===str) {return [count,i];}
+    if (dataset[i]["playerId"]===str) {return new NameQuantityNode(i,count);}
   }
   return false;
 }
@@ -1204,6 +1206,7 @@ function getPlayerIDAndRegion(x) {
     case 'D1596B68ED3EE3CA': return ["Jcool","images/US.png"];
     case '28104DE1ED018629': return ["Yahoo","images/JP.png"];
     case 'E1D1D597940401C7': return ["Empex","images/US.png"];
+    case '4B7D706D8F20A001': return ["Patrick","images/US.png"];
     case '855843F84CCF6FEB': case 'CA214F0DB57DB789': return ["Laty","images/US.png"];
     case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
