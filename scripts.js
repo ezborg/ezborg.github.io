@@ -642,7 +642,7 @@ function getMonthBundleByYear(dataset,year) {
 /** checks if playerId is in top 10
  * @param {Array} dataset 
  * @param {string} id 
- * @returns [lb rank,index] */
+ * @returns NameQuantityNode(ghost index,rank) */
 function inTopTen(dataset,id) {
   let count = 0; //keeps track of unique players in top 10, breaks if more than 10
   const str = id.toUpperCase();
@@ -711,7 +711,7 @@ function calculateDifference(recordTime,nonRecordTime) {
 
 /** creates pie chart
  * @param {string} tableIndex index for tableInfo
- * @param {Array} dataset nested array */
+ * @param {Array} dataset NameQuantityNode Array */
 function displayPie(tableIndex,dataset) {
   let numbers = [], titles = [];
   for (let i=0;i<dataset.length;i++) {
@@ -755,9 +755,9 @@ function displayBar(tableIndex,dataset,x) {
 }
 
 /** used for vehicle/character/controller tables, 
- * passed array must be numerically sorted
+ * passed array must be sorted numerically
  * @param {string} tableName 
- * @param {Array} dataset array of arrays ['name',total]
+ * @param {Array} dataset NameQuantityNode Array
  * @param {string} title1 order matters
  * @param {string} title2  */
 function displaySimpleTable(tableName,dataset,title1,title2) {
@@ -787,9 +787,9 @@ function displaySimpleTable(tableName,dataset,title1,title2) {
 }
 
 /** used for nation and player tables, 3 elements, 
- * passed array must be numerically sorted
+ * passed array must be sorted numerically
  * @param {string} tableName 
- * @param {Array} dataset array of arrays ['name',total,'flag']
+ * @param {Array} dataset NameQuantityNode Array
  * @param {string} title1 order matters
  * @param {string} title2 
  * @param {string} title3 */
@@ -823,8 +823,8 @@ function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
 }
 
 /** top 10 longest standing records,
- * th are fixed, array is already sorted so function just displays first ten elements
- * @param {Array} dataset array of arrays */
+ * th are fixed, array is already sorted by duration so function just displays first ten elements
+ * @param {Array} dataset NameQuantityNode Array */
 function displayTopTen(dataset) {
   let infoTitle = document.getElementById('longList').getElementsByTagName('thead')[0];
   let titleRow = infoTitle.insertRow();
