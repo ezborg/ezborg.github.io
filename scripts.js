@@ -48,8 +48,14 @@ class NameQuantityNode {
   }
 }
 
+
+/*****************************************************************************/
+/*                         Leaderboard Main Func                             */
+/*****************************************************************************/
+
+
 function loadLeaderboard(load) {
-  buildWebpage()
+  buildRecordWebpage()
   fetch(load).then(mainRes => {mainRes.json().then(mainLB =>{this.mainLB = mainLB;
 
   /*for (let i=0;i<mainLB["leaderboards"].length;i++) {
@@ -113,7 +119,7 @@ function loadLeaderboard(load) {
           continue;
         }
 
-        let player = getPlayerIDAndRegion(results[index]["value"]["ghosts"]["0"]["playerId"]),
+        let player = getPlayerAndRegion(results[index]["value"]["ghosts"]["0"]["playerId"]),
         currentVehicle=getVehicle(results[index]["value"]["ghosts"]["0"]["vehicleId"]),
         currentCharacter=getCharacter(results[index]["value"]["ghosts"]["0"]["driverId"]),
         currentController=getController(results[index]["value"]["ghosts"]["0"]["controller"]);
@@ -165,7 +171,7 @@ function loadLeaderboard(load) {
         cell2.innerHTML = category;
         cell3.innerHTML = recordTime.slice(1); //removes initial 0
         cell4.innerHTML = player[0];
-        cell5.innerHTML = checkMii(results[index]["value"]["ghosts"]["0"]["player"]);
+        cell5.innerHTML = checkDefaultMii(results[index]["value"]["ghosts"]["0"]["player"]);
         cell6.appendChild(createImage(player[1]));
         cell7.innerHTML = currentCharacter;
         cell8.innerHTML = currentVehicle;
@@ -218,6 +224,12 @@ function loadLeaderboard(load) {
   });
 })}) //tag closures from original fetch statement
 }
+
+
+/*****************************************************************************/
+/*                              Top10 Main Func                              */
+/*****************************************************************************/
+
 
 function topsByPID() {
   let ctgp150 = document.getElementById("150CTGP"), ctgp200 = document.getElementById("200CTGP"),
@@ -387,7 +399,7 @@ let tableInfo = {
 }
 
 /** create html elements common across all leaderboards */
-function buildWebpage() {
+function buildRecordWebpage() {
   document.body.appendChild(createTable("main"));
   let break1 = document.createElement("br");
   document.body.appendChild(break1);
@@ -436,14 +448,17 @@ function buildWebpage() {
   document.body.appendChild(chronoDiv);
 }
 
-/** create h2 element */
+/** create html h2 
+ * @param {String} text header text
+ * @returns html header object */
 function createHeaderTwo(text) {
-  let statHeader = document.createElement("h2");
-  statHeader.appendChild(document.createTextNode(text));
-  return statHeader;
+  let header = document.createElement("h2");
+  header.appendChild(document.createTextNode(text));
+  return header;
 }
 
-/** create a div for a chart
+/** takes a string to reference its objects in tableInfo.json,
+ * create a div for a chart
  * @param {string} index 
  * @returns */
 function createChart(index) {
@@ -452,7 +467,7 @@ function createChart(index) {
   return divChart;
 }
 
-/** uses index for tableInfo
+/** takes a string to reference its objects in tableInfo.json
  * @param {string} index 
  * @returns div element containing header and table */
 function createTableHeaderDiv(index) {
@@ -462,7 +477,7 @@ function createTableHeaderDiv(index) {
   return div;
 }
 
-/** create html image object
+/** create html image object, height is set to 32
  * @param {string} pictureName format="images/XX.png"
  * @returns html image node */
 function createImage(pictureName) {
@@ -492,8 +507,8 @@ function createTable(index) {
   return tableadd;
 }
 
-/** takes a string to reference its objects in tableInfo.json
- * makes a div with a header and table for grid layout
+/** takes a string to reference its objects in tableInfo.json, 
+ * makes large html div with a header and table for grid layout
  * @param {string} index 
  * @returns */
 function createTableChartDiv(index) {
@@ -538,13 +553,12 @@ function createTableHeader11(row,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) {
 /*                              Helper Functions                             */
 /*****************************************************************************/
 
-
-/** sorts Node array by its name, used for years */
+/** use with JS sort method, sorts Node array by its name */
 function sortNodeByName(a,b) {
   return b.getName() - a.getName();
 }
 
-/** sorts Node array by its quantity element */
+/** use with JS sort method, sorts Node array by its quantity */
 function sortNodeByQuantity(a,b) {
   return b.getQuantity() - a.getQuantity();
 }
@@ -552,7 +566,7 @@ function sortNodeByQuantity(a,b) {
 /** checks if default player mii was used
  * @param {string} text 
  * @returns proper mii name */
-function checkMii(text) {
+function checkDefaultMii(text) {
   if (text==="no name") {return "Player"}
   return text;
 }
@@ -566,7 +580,7 @@ function getRecordDuration(recordset) { //(UTC time stamp)
 
 /** sorts records into month they were achieved
  * @param {Array} dataset 
- * @returns array*/
+ * @returns array */
 function getMonths(dataset) {
   let months = [0,0,0,0,0,0,0,0,0,0,0,0];
   for (let i=0;i<dataset.length;i++) {
@@ -604,7 +618,8 @@ function splitNameQuantity(dataset) {
   return [one,two];
 }
 
-/** recursive function to return correct alphabetical index
+/** Recursive function to return correct alphabetical index. 
+ * Function assumes there is another entry with the same count as the first element
  * @param {Array} dataset 
  * @param {Number} index 
  * @param {Number} lowIndex 
@@ -907,7 +922,7 @@ function isSlowGlitch(current_glitch,not_glitch) { //compares two values of type
  * @param {string} recordTime used to pass to slowGlitch function
  * @param {string} index object literal of j
  * @param {number} j index=j
- * @returns a string containing a tracks category */
+ * @returns a string of the track's category */
 function determineCategory(mainLB,recordTime,index,j) {
   let category;
   if (j>0 && mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-1}`]["name"]) {
@@ -939,7 +954,7 @@ function determineCategory(mainLB,recordTime,index,j) {
         shortcutCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Shortcut";}
     }
 
-    try {//used for six king and would work for 150cc Nintendo's
+    try {//used for six king lab and would work for 150cc Nintendo's
       if (mainLB["leaderboards"][index]["categoryId"]===16) {category = "Shortcut";}
     }
     catch(err) {console.log("Error handled: categoryId not present");}
@@ -957,7 +972,8 @@ function determineCategory(mainLB,recordTime,index,j) {
 /*                          Switch Case Statments                            */
 /*****************************************************************************/
 
-//default value is unknown and will show up in stats table as unknown with proper tally
+//default value is set to unknown and will prevent unknown players from being added to player stats tables
+//default value is unnecessary for all other switch/cases
 
 /** convert controller (int) to actual controller (string)
  * @param {Number} x 
@@ -971,7 +987,7 @@ function getController(x) {
       default: return "Unknown";
 }}
 
-/** converts vehicleId to actual vehicle, karts 1-17, bikes 18-35
+/** converts vehicleId to actual vehicle, karts 0-17, bikes 18-35
  * @param {Number} x 
  * @returns vehicle string */
 function getVehicle(x) {
@@ -1076,9 +1092,9 @@ function getCharacter(x) {
  * Giant switch case to convert playerId to player name and country
  * Add another case for new player records or new playerID for existing player
  * Players often use hard to recognize mii names or incorrect regions when setting records
- * @param {Number} x 
+ * @param {Hash} x 
  * @returns array ["player","images/XX.png"] */
-function getPlayerIDAndRegion(x) {
+function getPlayerAndRegion(x) {
   switch (x) {
     case '39B00EEE8050C7F5': return ["Doge","images/US.png"];
     case '51152E6C037842FB': return ["Lawrence","images/US.png"];
