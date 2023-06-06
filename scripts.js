@@ -1143,7 +1143,6 @@ function getPlayerAndRegion(x) {
     case '45120F275D291BFB': return ["Alex Croteau","images/US.png"];
     case 'D35CD0F2F6576A47': return ["Police","images/US.png"];
     case '95C6241CCE24A853': return ["Batcake","images/US.png"];
-    case '890E6F8CCB86DA53': return ["Reece","images/US.png"];
     case '9E0D6D2FBC109C35': return ["Flurry","images/US.png"];
     case 'BA141C33DD30F62B': return ["Jσikε","images/US.png"];
     case '611AF70B6321DE01': return ["Zane","images/US.png"];
@@ -1223,6 +1222,8 @@ function getPlayerAndRegion(x) {
     case '28104DE1ED018629': return ["Yahoo","images/JP.png"];
     case 'E1D1D597940401C7': return ["Empex","images/US.png"];
     case '4B7D706D8F20A001': return ["Patrick","images/US.png"];
+    case '0E40FC29E176583E': return ["Angel","images/CA.png"];
+    case '19B2986D5A69260B': case '890E6F8CCB86DA53': return ["Reece","images/US.png"];
     case '855843F84CCF6FEB': case 'CA214F0DB57DB789': return ["Laty","images/US.png"];
     case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
