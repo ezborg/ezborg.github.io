@@ -20,7 +20,7 @@ class NameQuantityNode {
    * @param {String} name 
    * @param {Number} quantity usually 1 when initialized
    * @param {String} extra image string 
-   * @param {String} player only used for orderedDuration*/
+   * @param {String} player only used for orderedDuration */
   constructor(name, quantity, image, player) {
     this.name = name;
     this.quantity = quantity;
@@ -75,8 +75,9 @@ function loadLeaderboard(load) {
       let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
       //create header row and init body row
 
-      category = 'Normal', allDates = [], allYears = [], vehicleTally = [], characterTally = [], controllerTally = [],
-      playerTally = [], glitchTally = [], noGlitchTally = [], countryTally = [], orderedDuration = [];
+      let category = 'Normal', screenName = '', allDates = [], allYears = [], 
+      vehicleTally = [], characterTally = [], controllerTally = [], playerTally = [], 
+      glitchTally = [], noGlitchTally = [], countryTally = [], orderedDuration = [];
       //declare category and arrays
 
       for (let j=0;j<mainLB["leaderboards"].length;j++) {
@@ -89,20 +90,15 @@ function loadLeaderboard(load) {
         if (category==="Slower-Glitch") {continue;} //prevent slow glitches or broken categories from displaying on leaderboard
 
         let row = myTable.insertRow();
-        let cell1 = row.insertCell(0),
-        cell2 = row.insertCell(1),
-        cell3 = row.insertCell(2),
-        cell4 = row.insertCell(3),
-        cell5 = row.insertCell(4),
-        cell6 = row.insertCell(5),
-        cell7 = row.insertCell(6),
-        cell8 = row.insertCell(7),
-        cell9 = row.insertCell(8),
-        cell10 = row.insertCell(9),
+        let cell1 = row.insertCell(0), cell2 = row.insertCell(1),
+        cell3 = row.insertCell(2), cell4 = row.insertCell(3),
+        cell5 = row.insertCell(4), cell6 = row.insertCell(5),
+        cell7 = row.insertCell(6), cell8 = row.insertCell(7),
+        cell9 = row.insertCell(8), cell10 = row.insertCell(9),
         cell11 = row.insertCell(10);
         //One row and 11 columns for each track and category
 
-        if (results[index]["status"] === "rejected") { 
+        if (results[index]["status"] === "rejected") {
           //display generic track info with main leaderboard if a track leaderboard fails, restarts loop
           cell1.innerHTML = mainLB["leaderboards"][index]["name"];
           cell2.innerHTML = category;
@@ -140,9 +136,11 @@ function loadLeaderboard(load) {
           else {
             if (toBeAdded = addToArray(player[0],noGlitchTally)) {noGlitchTally.push(new NameQuantityNode(player[0],1,player[1]))}
           }
+          screenName = player[0];
         }
         else {
-          console.log("Missing player entry at: "+mainLB["leaderboards"][index]["name"]);
+          console.log("Missing player entry at: "+mainLB["leaderboards"][index]["name"]+": "+category);
+          screenName = checkDefaultMii(results[index]["value"]["ghosts"]["0"]["player"]);
         }
 
         allDates.push(recordDate);
@@ -170,7 +168,7 @@ function loadLeaderboard(load) {
         cell1.innerHTML = mainLB["leaderboards"][index]["name"];
         cell2.innerHTML = category;
         cell3.innerHTML = recordTime.slice(1); //removes initial 0
-        cell4.innerHTML = player[0];
+        cell4.innerHTML = screenName;
         cell5.innerHTML = checkDefaultMii(results[index]["value"]["ghosts"]["0"]["player"]);
         cell6.appendChild(createImage(player[1]));
         cell7.innerHTML = currentCharacter;
@@ -213,16 +211,13 @@ function loadLeaderboard(load) {
   })
     .catch((err) => {
       console.log(err);
-      console.log("Failed Fetching Main Leaderboard or another Fatal Error");
-      const element = document.getElementById("main");
-      if (element) {
-        alert("Main Leaderboard has loaded but an internal error has happened.")
-      }
-      else {
-        alert("Main database hasn't responded, chadsoft server is most likely down or running slowly. Try Again Later.")
-      }
+      console.log("Fatal Error in logic");
   });
-})}) //tag closures from original fetch statement
+}).catch((err) => {
+  console.log(err);
+  alert("Main database hasn't responded, chadsoft server is most likely down or running too slow, Try again later.")
+})
+}) //tag closures from original fetch statement
 }
 
 
@@ -1153,7 +1148,7 @@ function getPlayerAndRegion(x) {
     case '773622CDCD37643D': return ["Ace","images/GB.png"];
     case '2213E98F05362266': return ["Steve","images/GR.png"];
     case '8D5E9B25C4754392': return ["Zilla","images/CA.png"];
-    case 'CCD7533B6AC242ED': return ["Supreme","images/US.png"];
+    case '8E788D1F04C44502': return ["Supreme","images/US.png"];
     case 'B2AD3F4AE4DDE118': return ["Dxrk","images/DE.png"];
     case '2B5181110E294547': return ["Kit","images/CA.png"];
     case '61B745D2CE98F5E0': return ["David","images/GB.png"];
@@ -1165,7 +1160,6 @@ function getPlayerAndRegion(x) {
     case '40E78839761C0BCF': return ["Orca","images/GB.png"];
     case 'BEFFC1EDEF914AE7': return ["Sgt","images/CA.png"];
     case 'EC855BCF8FE000E2': return ["Booshi","images/FR.png"];
-    case '79464E926AE9EECD': return ["Fraterz","images/US.png"];
     case '1F63CE364696FE18': return ["Fantasy","images/US.png"];
     case 'A76198BDC4A3CF95': return ["Hades","images/US.png"];
     case 'C4FB9639F94E8626': return ["Justin.","images/US.png"];
@@ -1174,7 +1168,6 @@ function getPlayerAndRegion(x) {
     case 'D6A08AABAF569EC3': return ["Carson","images/US.png"];
     case '0F91061953FAD1EB': return ["Ant","images/DZ.png"];
     case '743B83BE3EC57EEB': return ["Kaden","images/GB.png"];
-    case '73B48F99FD87462F': return ["Yoshi","images/US.png"];
     case '6C3E0B961B386F1E': return ["Marky","images/DK.png"];
     case '013D172DE491D535': return ["Etterbeer","images/NL.png"];
     case '1C6A832CF6B30CFF': return ["ElecTrick","images/IE.png"];
@@ -1223,11 +1216,21 @@ function getPlayerAndRegion(x) {
     case 'E1D1D597940401C7': return ["Empex","images/US.png"];
     case '4B7D706D8F20A001': return ["Patrick","images/US.png"];
     case '0E40FC29E176583E': return ["Angel","images/CA.png"];
+    case 'E727E36DBB989ABE': return ["Snowman","images/US.png"];
+    case '1B2F946516B8A211': return ["Sean","images/GB.png"];
+    case '577232D12D27F89D': return ["Craze","images/US.png"];
+    case '65702F3A15278B49': return ["Zoren","images/US.png"];
+    case '2BCC7E4F1E811888': return ["Marvus","images/CA.png"];
+    case 'C99960EDB3B7890D': return ["Zi","images/FR.png"];
+    case 'CCE38AAD3BA3CEEF': return ["Soggy","images/US.png"];
+    case '580AD241ABC962FC': return ["FoxAmexion","images/US.png"];
+    case '79464E926AE9EECD': case '5E155CC9E1788D49': return ["Fraterz","images/US.png"];
+    case '73B48F99FD87462F': case '552A7CC576D11D56': return ["Yoshi","images/US.png"];
     case '19B2986D5A69260B': case '890E6F8CCB86DA53': return ["Reece","images/US.png"];
     case '855843F84CCF6FEB': case 'CA214F0DB57DB789': return ["Laty","images/US.png"];
     case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
     case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
-    case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];//using stubbz old wii
+    case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];
     case '6C37FC09DD67E33B': case '271EC09BB2E937BB': return ["Bickbork","images/US.png"];
     case 'B9AB2EC621E671DB': case 'E659F91B99D78CA8': return ["Will","images/US.png"];
     case '22475C923D0935C9': case '8DBC8088D4206570': return ["Sardine","images/US.png"];
