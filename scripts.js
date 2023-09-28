@@ -220,6 +220,54 @@ function loadLeaderboard(load) {
 }) //tag closures from original fetch statement
 }
 
+function PlayersPageAndPIDbyPlayerName() {
+  let inputtedName = document.getElementById("playerName");
+  let index = 0;
+  let simpleIDs = "";
+  //check and remove previous search if necessary
+  const element = document.getElementById("h1");
+  const element2 = document.getElementById("d1");
+  if (element) {
+    element.remove();
+    element2.remove();
+  }
+
+  fetch('./players.json').then(mainRes => {mainRes.json().then(playersPage => {this.playersPage = playersPage;
+    for (let i=0;i<playersPage.length;i++) {
+      if (playersPage[i].playerName.includes(inputtedName.value)) {
+        console.log(playersPage[i].playerID);
+        index = i;
+        break;
+      }
+    }
+
+    let urlDiv = document.createElement("div");
+    urlDiv.id = "d1";
+    if (index==0) {
+      console.log("player not found");
+      simpleIDs+="Player not found";
+      urlDiv.appendChild(createHeaderTwo("Player not found"));
+    }
+    else if (playersPage[index].playerID.length==16) { //playerID == 16 if only 1 playerID else it is a single digit
+      simpleIDs+=playersPage[index].playerID;
+      urlDiv.appendChild(createHyperLink(`https://www.chadsoft.co.uk/time-trials/players/${playersPage[index].playerID.slice(0,2)}/${playersPage[index].playerID.slice(2)}.html`));
+    }
+    else {
+      for (let i=0;i<playersPage[index].playerID.length;i++) {
+        simpleIDs+=playersPage[index].playerID[i]+" ";
+        urlDiv.appendChild(createHyperLink(`https://www.chadsoft.co.uk/time-trials/players/${playersPage[index].playerID[i].slice(0,2)}/${playersPage[index].playerID[i].slice(2)}.html`));
+        let break1 = document.createElement("br");
+        urlDiv.appendChild(break1);
+      }
+    }
+
+    let header1 = document.createElement("h3");
+    header1.appendChild(document.createTextNode(simpleIDs));
+    header1.id = "h1";
+    document.body.appendChild(header1);
+    document.body.appendChild(urlDiv);
+  })})
+}
 
 /*****************************************************************************/
 /*                              Top10 Main Func                              */
@@ -480,6 +528,16 @@ function createImage(pictureName) {
   image.src = pictureName;
   image.height = 32;
   return image;
+}
+
+/** creates a type html object, can be used for internal or external hyperlinks
+ * @param {String} link 
+ * @returns */
+function createHyperLink(link) {
+  let redirect = document.createElement("a");
+  redirect.appendChild(document.createTextNode(link));
+  redirect.href = link;
+  return redirect;
 }
 
 /** Creates internal link to the top of the webpage */

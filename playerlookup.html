@@ -10,22 +10,23 @@
         <title>CTGP Player Finder</title>
         <link href="styles.css" rel="stylesheet" type="text/css">
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
+        <script src="scripts.js"></script>
     </head>
     <body>
         <header>
-            <h1> Display your top 10 times </h1>
+            <h1> Lookup your PlayerID </h1>
             <nav>
                 <a href="index.html">Home</a> -------
                 <a href="records.html">150cc CTGP Records</a> -------
                 <a href="recordstwo.html">200cc CTGP Records</a> -------
                 <a href="recordsnin.html">200cc Nintendo Records</a> -------
-                <a href="tops.html">Check your top 10 Times</a>
+                <a href="tops.html" target="_blank">Check your top 10 Times</a>
             </nav>
         </header>
-        <p> !Not working currently! In progress currently.
-
-            Many former and all current record holders can get their playerID and chadsoft players page link by inputting your name. Capitalization is not neccessary.
-        </p>
-        <label for="playerID">Input Name Here:</label><br>
+        <p> Many former and all current record holders can get their playerID and chadsoft players page link by inputting your name. First letter must be capitalized. </p><b>
+        <a href="players.json" target="_blank">Want to see the Raw Data?</a><br>
+        <label for="playerName">Input Name Here:</label><br>
+        <input type="text" id="playerName" name="playerName"><br>
+        <input type="button" onclick="PlayersPageAndPIDbyPlayerName()" value="Search"><br>
     </body>
 </html>
