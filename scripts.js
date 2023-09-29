@@ -75,7 +75,7 @@ function loadLeaderboard(load) {
       let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
       //create header row and init body row
 
-      let category = 'Normal', screenName = '', allDates = [], allYears = [], 
+      let category = 'Normal', screenName = '', allDates = [], allYears = [], allRecords = [],
       vehicleTally = [], characterTally = [], controllerTally = [], playerTally = [], 
       glitchTally = [], noGlitchTally = [], countryTally = [], orderedDuration = [];
       //declare category and arrays
@@ -87,6 +87,7 @@ function loadLeaderboard(load) {
         recordDate = mainLB["leaderboards"][index]["fastestTimeLastChange"].slice(0,10); //UTC Time Date
         duration = getRecordDuration(recordDate);
         category = determineCategory(mainLB,recordTime,index,j);
+        allRecords.push(recordTime);
         if (category==="Slower-Glitch") {continue;} //prevent slow glitches or broken categories from displaying on leaderboard
 
         let row = myTable.insertRow();
@@ -187,6 +188,7 @@ function loadLeaderboard(load) {
       allYears.sort(sortNodeByName);
       //numeric sorting
 
+      document.getElementById("totalTime").textContent=`Overall Combined Time: ${addGhostTimes(allRecords)}`;
       document.getElementById("totalCount").textContent=`Total Records: ${allDates.length}`;
 
       displayPie("vehicle",vehicleTally);
@@ -219,6 +221,12 @@ function loadLeaderboard(load) {
 })
 }) //tag closures from original fetch statement
 }
+
+
+/*****************************************************************************/
+/*                              PlayerID Lookup                              */
+/*****************************************************************************/
+
 
 function PlayersPageAndPIDbyPlayerName() {
   let inputtedName = document.getElementById("playerName");
@@ -268,6 +276,7 @@ function PlayersPageAndPIDbyPlayerName() {
     document.body.appendChild(urlDiv);
   })})
 }
+
 
 /*****************************************************************************/
 /*                              Top10 Main Func                              */
@@ -476,17 +485,21 @@ function buildRecordWebpage() {
   chronoDiv.className = "triple-grid";
   yearsDiv = document.createElement("div");
   yearsDiv.appendChild(createChart("years"));
-  datesDiv = document.createElement("div");
-  datesDiv.appendChild(createChart("dates"));
   chronoDiv.appendChild(yearsDiv);
   headerDiv = document.createElement("div");
   let totalCount = document.createElement("h2");
   totalCount.id = "totalCount";
-  totalCount.appendChild(document.createTextNode("0"));
+  totalCount.appendChild(document.createTextNode("Ghost table is building"));
   headerDiv.appendChild(totalCount);
+  let totalTime = document.createElement("h2");
+  totalTime.id = "totalTime";
+  totalTime.appendChild(document.createTextNode("Stats are building"));
+  headerDiv.appendChild(totalTime);
   headerDiv.appendChild(createHeaderTwo("Current Date: "+`${new Date().getMonth()+1}`+"/"+`${new Date().getDate()}`+"/"+`${new Date().getFullYear()}`));
   headerDiv.appendChild(createHeaderTwo("Records by Year and Month"));
   chronoDiv.appendChild(headerDiv);
+  datesDiv = document.createElement("div");
+  datesDiv.appendChild(createChart("dates"));
   chronoDiv.appendChild(datesDiv);
   document.body.appendChild(chronoDiv);
 }
@@ -922,48 +935,52 @@ function displayTopTen(dataset) {
   }
 }
 
+/** Uses simple ghost time, 
+ * @param {Array} totalTimes 
+ * @returns String, total ghost times */
+function addGhostTimes(totalTimes) {
+  let hours = 0, minutes = 0, seconds = 0, milliseconds = 0;
+  for (let q=0;q<totalTimes.length;q++) {
+    milliseconds+=parseInt(totalTimes[q].slice(6));
+    if (milliseconds>=1000) {
+      milliseconds-=1000;
+      seconds+=1;
+    }
+    seconds+=parseInt(totalTimes[q].slice(3,5));
+    if (seconds>=60) {
+      seconds-=60;
+      minutes+=1;
+    }
+    minutes+=parseInt(totalTimes[q].slice(1,2));
+    if (minutes>=60) {
+      minutes-=60;
+      hours+=1;
+    }
+  }
+  return `${hours}:${minutes}:${seconds}.${milliseconds}`;
+}
+
 /** takes two strings representing record times XX:XX.XXX
  * @param {string} current_glitch track time being tested
  * @param {string} not_glitch track time from no-glitch category
- * @returns boolean */
+ * @returns boolean, true if slowglitch, false if fastglitch */
 function isSlowGlitch(current_glitch,not_glitch) { //compares two values of type 02:22.222
   //Minutes
-  if (parseInt(current_glitch.slice(1))<parseInt(not_glitch.slice(1))) {
+  if (parseInt(current_glitch.slice(1,2))<parseInt(not_glitch.slice(1,2))) {
     return false;
   }
-  if (parseInt(current_glitch.slice(1))>parseInt(not_glitch.slice(1))) {
+  if (parseInt(current_glitch.slice(1,2))>parseInt(not_glitch.slice(1,2))) {
     return true;
   }
   //Seconds
-  if (parseInt(current_glitch.slice(1))==parseInt(not_glitch.slice(1)) && 
-  parseInt(current_glitch.slice(3))>parseInt(not_glitch.slice(3))) {
-    return true;
-  }
-  if (parseInt(current_glitch.slice(1))==parseInt(not_glitch.slice(1)) && 
-  parseInt(current_glitch.slice(3))==parseInt(not_glitch.slice(3)) && 
-  parseInt(current_glitch.slice(4))>parseInt(not_glitch.slice(4))) {
+  if (parseInt(current_glitch.slice(1,2))==parseInt(not_glitch.slice(1,2)) && 
+  parseInt(current_glitch.slice(3,5))>parseInt(not_glitch.slice(3,5))) {
     return true;
   }
   //Milliseconds
-  if (parseInt(current_glitch.slice(1))==parseInt(not_glitch.slice(1)) && 
-  parseInt(current_glitch.slice(3))==parseInt(not_glitch.slice(3)) && 
-  parseInt(current_glitch.slice(4))==parseInt(not_glitch.slice(4)) && 
+  if (parseInt(current_glitch.slice(1,2))==parseInt(not_glitch.slice(1,2)) && 
+  parseInt(current_glitch.slice(3,5))==parseInt(not_glitch.slice(3,5)) &&
   parseInt(current_glitch.slice(6))>parseInt(not_glitch.slice(6))) {
-    return true;
-  }
-  if (parseInt(current_glitch.slice(1))==parseInt(not_glitch.slice(1)) && 
-  parseInt(current_glitch.slice(3))==parseInt(not_glitch.slice(3)) && 
-  parseInt(current_glitch.slice(4))==parseInt(not_glitch.slice(4)) && 
-  parseInt(current_glitch.slice(6))==parseInt(not_glitch.slice(6)) &&
-  parseInt(current_glitch.slice(7))>parseInt(not_glitch.slice(7))) {
-    return true;
-  }
-  if (parseInt(current_glitch.slice(1))==parseInt(not_glitch.slice(1)) && 
-  parseInt(current_glitch.slice(3))==parseInt(not_glitch.slice(3)) && 
-  parseInt(current_glitch.slice(4))==parseInt(not_glitch.slice(4)) && 
-  parseInt(current_glitch.slice(6))==parseInt(not_glitch.slice(6)) &&
-  parseInt(current_glitch.slice(7))==parseInt(not_glitch.slice(7)) &&
-  parseInt(current_glitch.slice(8))>parseInt(not_glitch.slice(8))) {
     return true;
   }
   return false;
