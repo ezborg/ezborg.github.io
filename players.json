@@ -133,7 +133,9 @@
 {"playerID": "2BCC7E4F1E811888", "playerName": "Marvus","countryID": "images/CA.png"},
 {"playerID": "CCE38AAD3BA3CEEF", "playerName": "Soggy","countryID": "images/US.png"},
 {"playerID": "580AD241ABC962FC", "playerName": "FoxAmexion","countryID": "images/US.png"},
+{"playerID": "987EE0EB54AB18BF", "playerName": "Suciorap","countryID": "images/GB.png"},
 
+{"playerID": ["1875A48ED14ED211","54F2148B6C7083A3"], "playerName": "Coby","countryID": "images/GB.png"},
 {"playerID": ["79464E926AE9EECD","5E155CC9E1788D49"], "playerName": "Fraterz", "countryID": "images/US.png"},
 {"playerID": ["73B48F99FD87462F","552A7CC576D11D56"], "playerName": "Yoshi", "countryID": "images/US.png"},
 {"playerID": ["19B2986D5A69260B","890E6F8CCB86DA53"], "playerName": "Reece", "countryID": "images/US.png"},

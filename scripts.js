@@ -2,12 +2,13 @@ const baseURL = "https://tt.chadsoft.co.uk", noShortcutCategoryIDs = [2,6], //mu
 shortcutCategories = ["GCN DK Mountain","Incendia Castle"],
 slowCategories = ["N64 Bowser's Castle","Mushroom Gorge","GCN Mario Circuit","Toad's Factory","DS Desert Hills"],
 //arrays for determining categories for edge cases
-largeCategories = ["GCN Baby Park","Jungle Jamble","Undiscovered Offlimit","Wetland Woods","Sunset Forest","White Garden",
-                    "Colour Circuit","GCN Mushroom Bridge","Fishdom Island","Kinoko Cave","Summer Starville"];
+largeCategories = ["GCN Baby Park","Jungle Jamble","Undiscovered Offlimit","Wetland Woods","Sunset Forest","White Garden","Mushroom Island",
+                    "Colour Circuit","GCN Mushroom Bridge","Fishdom Island","Kinoko Cave","Summer Starville","Spectral Station","Obstagoon's Palace",
+                  "Camp Kartigan","Castle of Darkness","Haunted Gardens","Icepeak Mountain","Castle of Time","N.I.S.W.O.E. Desert"];
 //array to fetch more ghosts for top 10 LBs, category is large if top 10 ghosts are not within first 100 entries
 //must be manually inputed, ended last time at GCN RR, list based on total ghosts
 
-let urlList = [];
+let urlList = [], categories = [], trackIds = []; //trackIds and categories arrays are used to find data in first mainLB fetch because not all leaderboards are fetched afterwards
 const leaderboardsURLS = {
   '150C': 'https://tt.chadsoft.co.uk/ctgp-leaderboards.json',
   '200C': 'https://tt.chadsoft.co.uk/ctgp-leaderboards-200cc.json',
@@ -63,6 +64,15 @@ function loadLeaderboard(load) {
   } //FUTURE if new params found: url.searchParams.set("limit",1) */
 
   for (let i=0;i<mainLB["leaderboards"].length;i++) {
+    /*
+    category = determineCategory(mainLB,mainLB["leaderboards"][`${i}`]["fastestTimeSimple"],`${i}`,i);
+    trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
+
+    if (category==="Slower-Glitch") { //prevent slow glitches from displaying
+      console.log(mainLB["leaderboards"][`${i}`]["name"] + "Slow glitch");
+      continue;
+    }
+    categories.push(category); */
     urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=1');
   }
   let fetches = urlList.map(url => fetch(url).then(res => res.json()));
@@ -80,7 +90,7 @@ function loadLeaderboard(load) {
       glitchTally = [], noGlitchTally = [], countryTally = [], orderedDuration = [];
       //declare category and arrays
 
-      for (let j=0;j<mainLB["leaderboards"].length;j++) {
+      for (let j=0;j<results.length;j++) {
 
         let index = `${j}`;
         let recordTime = mainLB["leaderboards"][index]["fastestTimeSimple"], //00:00.000
@@ -166,7 +176,7 @@ function loadLeaderboard(load) {
         }
         //add ghost data to arrays
 
-        cell1.innerHTML = mainLB["leaderboards"][index]["name"];
+        cell1.innerHTML = results[index]["value"]["name"];
         cell2.innerHTML = category;
         cell3.innerHTML = recordTime.slice(1); //removes initial 0
         cell4.innerHTML = screenName;
@@ -181,8 +191,8 @@ function loadLeaderboard(load) {
 
       //Begin Stats Section
 
-      orderedDuration.sort(sortNodeByQuantity);
-      countryTally.sort(sortNodeByQuantity); vehicleTally.sort(sortNodeByQuantity); characterTally.sort(sortNodeByQuantity);
+      orderedDuration.sort(sortNodeByQuantity);countryTally.sort(sortNodeByQuantity); 
+      vehicleTally.sort(sortNodeByQuantity); characterTally.sort(sortNodeByQuantity);
       controllerTally.sort(sortNodeByQuantity); playerTally.sort(sortNodeByQuantity); 
       glitchTally.sort(sortNodeByQuantity); noGlitchTally.sort(sortNodeByQuantity);
       allYears.sort(sortNodeByName);
@@ -209,7 +219,7 @@ function loadLeaderboard(load) {
       displayBar("years",yearSplit[0],yearSplit[1]); //bar charts
       displayBar("dates",getMonths(allDates),["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"]);
       createRedirect();
-      urlList = []; //unused for now, potentially useful if more interaction is added.
+      urlList = [];
   })
     .catch((err) => {
       console.log(err);
@@ -282,24 +292,26 @@ function PlayersPageAndPIDbyPlayerName() {
 /*                              Top10 Main Func                              */
 /*****************************************************************************/
 
-
+/*
+Searches once and then searches again, fetching a lot of data so at least one fetch fails typically
+*/
 function topsByPID() {
   let ctgp150 = document.getElementById("150CTGP"), ctgp200 = document.getElementById("200CTGP"),
   nin200 = document.getElementById("200NIN"), playerID = document.getElementById("playerID"),
   timesheet = document.getElementById("Timesheet?"), load = "https://tt.chadsoft.co.uk/original-track-leaderboards-200cc.json",
-  allRecords = [], allPersonalRecords = [], retryfetches = [],
-  csvList = [["Track Name","Category","Rank","Time","Mii","Character","Vehicle","Date","Duration","Controller","Was WR?"]], //csv headers
+  urlList = [], allPersonalRecords = [], retryfetches = [], failedFetches = [], categories = [], categories2 = [], csvList = [],
   uniqueCheck = onlyOneCheckmark(ctgp150,ctgp200,nin200);
 
   //check if a leaderboard is built and remove it
   const element = document.getElementById("main");
-  const element2 = document.getElementsByTagName("h2");
-  const element3 = document.getElementById("download");
-  console.log(element2);
+  const element2 = document.getElementById("timeTotal");
+  const element3 = document.getElementById("personalTotal");
+  const element4 = document.getElementById("download");
   if (element) {
     element.remove();
-    element2[0].remove();
+    element2.remove();
     element3.remove();
+    element4.remove();
   }
 
   if (uniqueCheck && playerID.value.length===16) {
@@ -313,20 +325,35 @@ function topsByPID() {
 
   fetch(load).then(mainRes => {mainRes.json().then(mainLB =>{this.mainLB = mainLB;
 
-    console.log(mainLB);
-    if (timesheet.checked == true) { //every ghost
+    if (timesheet.checked === true) { //every ghost
       for (let i=0;i<mainLB["leaderboards"].length;i++) {
+        category = determineCategory(mainLB,mainLB["leaderboards"][`${i}`]["fastestTimeSimple"],`${i}`,i);
+        trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
+    
+        if (category==="Slower-Glitch") { //prevent slow glitches from displaying
+          console.log(mainLB["leaderboards"][`${i}`]["name"] + "Slow glitch");
+          continue;
+        }
         urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]);
+        categories.push(category);
       }
     }
-    else { //top 10 search
-      for (let i=0;i<mainLB["leaderboards"].length;i++) { 
-        //try to limit ghosts fetched to speed up process
+    else { //top 10 search, try to limit ghosts fetched to speed up process
+      for (let i=0;i<mainLB["leaderboards"].length;i++) {
+        category = determineCategory(mainLB,mainLB["leaderboards"][`${i}`]["fastestTimeSimple"],`${i}`,i);
+        trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
+    
+        if (category==="Slower-Glitch") { //prevent slow glitches from displaying
+          console.log(mainLB["leaderboards"][`${i}`]["name"] + "Slow glitch");
+          continue;
+        } 
         if (largeCategories.includes(mainLB["leaderboards"][`${i}`]["name"])) {
           urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=200');
+          categories.push(category);
         }
         else {
           urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=100');
+          categories.push(category);
         }
       }
     }
@@ -334,32 +361,23 @@ function topsByPID() {
 
     Promise.allSettled(fetches)
       .then((results) => {
-        console.log(results);
         document.body.appendChild(createTable("main"));
         let infoTitle = document.getElementById('main').getElementsByTagName('thead')[0];
         createTableHeader11(infoTitle.insertRow(),"Track Name","Category","Rank","Time","Record's Time","Difference","Character","Vehicle","Controller","Date","Duration");
         let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
-        let category = 'Normal', count = 0;
         for (let j=0;j<results.length;j++) {
           let rNum = [], index = `${j}`;
-          let recordTime = mainLB["leaderboards"][index]["fastestTimeSimple"], //00:00.000
-          category = determineCategory(mainLB,recordTime,index,j);
 
-          //prevent slow glitches from displaying
-          if (category==="Slower-Glitch") {
-            console.log(mainLB["leaderboards"][index]["name"] + "Slow glitch");
-            continue;
-          }
           //add failed fetches to array to try again
           if (results[index]["status"] === "rejected") {
-            console.log(mainLB["leaderboards"][index]["name"] + "Failed to fetch");
-            //csvList.push([mainLB["leaderboards"][index]["name"]]);
+            let failedTrack = trackIds.indexOf(urlList[index].slice(41,81)); //find track id from url and use it to find index of correlated track in master json
+            console.log(mainLB["leaderboards"][`${failedTrack}`]["name"]+" failed to fetch"); //master json always exists or it will have failed already
             retryfetches.push(urlList[index]);
+            categories2.push(categories[j]);
             continue;
           }
 
-          if (rNum = inTopTen(results[index]["value"]["ghosts"],playerID.value)) {
-            count++;
+          if (rNum = findGhostRank(results[index]["value"],playerID.value,timesheet.checked)) {
             let ghostLoc = rNum.getName(); //top 10 ghost index, string
             let row = myTable.insertRow();
             let cell1 = row.insertCell(0),
@@ -374,11 +392,11 @@ function topsByPID() {
             cell10 = row.insertCell(9),
             cell11 = row.insertCell(10);
 
-            cell1.innerHTML = mainLB["leaderboards"][index]["name"];
-            cell2.innerHTML = category;
+            cell1.innerHTML = results[index]["value"]["name"];
+            cell2.innerHTML = categories[j];
             cell3.innerHTML = rNum.getQuantity(); //rank
             cell4.innerHTML = results[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"].slice(1); //removes initial 0
-            cell5.innerHTML = recordTime;
+            cell5.innerHTML = results[index]["value"]["fastestTimeSimple"];
             cell6.innerHTML = calculateDifference(results[index]["value"]["ghosts"]["0"]["finishTimeSimple"],results[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"]);
             cell7.innerHTML = getCharacter(results[index]["value"]["ghosts"][ghostLoc]["driverId"]);
             cell8.innerHTML = getVehicle(results[index]["value"]["ghosts"][ghostLoc]["vehicleId"]);
@@ -386,153 +404,102 @@ function topsByPID() {
             cell10.innerHTML = results[index]["value"]["ghosts"][ghostLoc]["dateSet"].slice(0,10);
             cell11.innerHTML = getRecordDuration(results[index]["value"]["ghosts"][ghostLoc]["dateSet"]);
 
-            //allRecords.push(recordTime);
             allPersonalRecords.push(results[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"]);
-            csvList.push([mainLB["leaderboards"][index]["name"],category,rNum.getQuantity(),
+            csvList.push([results[index]["value"]["name"],categories[j],rNum.getQuantity(),
               results[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"].slice(1),results[index]["value"]["ghosts"][ghostLoc]["player"],
               getCharacter(results[index]["value"]["ghosts"][ghostLoc]["driverId"]),getVehicle(results[index]["value"]["ghosts"][ghostLoc]["vehicleId"]),
               results[index]["value"]["ghosts"][ghostLoc]["dateSet"].slice(0,10),getRecordDuration(results[index]["value"]["ghosts"][ghostLoc]["dateSet"]),
               getController(results[index]["value"]["ghosts"][ghostLoc]["controller"]),results[index]["value"]["ghosts"][ghostLoc]["wasWr"]]);
           }
+          else if (timesheet.checked) {
+            csvList.push([results[index]["value"]["name"],categories[j]]);
+          }
         }
-        /*
-        csvList.push([`Total Ghosts: ${count}`," ",`Total Personal Time: ${addGhostTimes(allPersonalRecords)}`]);
-        console.log(csvList);
-        var csv = 'data:text/csv;charset=utf-8,' + csvList.map(e => e.join(",")).join("\n");
-        let data = encodeURI(csv);
-        console.log(data);
-    
-        let testDownload = document.createElement('a');
-        testDownload.appendChild(document.createTextNode("Download Timesheet Here"));
-        testDownload.setAttribute('href',data);
-        testDownload.setAttribute('download', 'exports.csv');
-        //testDownload.click();
-        document.body.appendChild(testDownload);
-        */
 
-        //document.body.appendChild(createHeaderTwo(`Overall Combined Time: ${addGhostTimes(allPersonalRecords)}`));
-        //document.body.appendChild(createHeaderTwo(`Total Times: ${count}`));
-        //urlList = [];
-      })
-      .catch((err) => {
-        console.log(err);
-        console.log("Failed Fetching Main Leaderboard or another Fatal Error");
-        if (element) {
-          alert("An internal error has happened.")
+        if (retryfetches.length>0) {
+          console.log("Starting sleep: "+Date.now());
+          sleep(66000).then(() => { //wait 66 seconds, so api doesn't automatically reject requests
+            console.log("Ending sleep: "+Date.now());
+            console.log(retryfetches);
+
+            let fetches2 = retryfetches.map(url => fetch(url).then(res => res.json()));
+            Promise.allSettled(fetches2).then((results2) => {
+              let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
+              for (let j=0;j<results2.length;j++) {
+                let rNum = [], index = `${j}`;
+                if (results2[index]["status"] === "rejected") {
+                  let failedTrack = trackIds.indexOf(retryfetches[index].slice(41,81)); //find track id from url and use it to find index of correlated track in master json
+                  console.log(mainLB["leaderboards"][`${failedTrack}`]["name"]+" failed to fetch twice. Adding to failed list.");
+                  failedFetches.push(mainLB["leaderboards"][`${failedTrack}`]["name"]); //master json always exists or it will have failed already
+                  csvList.unshift([mainLB["leaderboards"][`${failedTrack}`]["name"],"Normal"]);
+                  continue;
+                }
+      
+                if (rNum = findGhostRank(results2[index]["value"],playerID.value,timesheet.checked)) {
+                  let ghostLoc = rNum.getName(); //top 10 ghost index, string
+                  let row = myTable.insertRow();
+                  let cell1 = row.insertCell(0),
+                  cell2 = row.insertCell(1),
+                  cell3 = row.insertCell(2),
+                  cell4 = row.insertCell(3),
+                  cell5 = row.insertCell(4),
+                  cell6 = row.insertCell(5),
+                  cell7 = row.insertCell(6),
+                  cell8 = row.insertCell(7),
+                  cell9 = row.insertCell(8),
+                  cell10 = row.insertCell(9),
+                  cell11 = row.insertCell(10);
+      
+                  cell1.innerHTML = results2[index]["value"]["name"];
+                  cell2.innerHTML = categories2[j];
+                  cell3.innerHTML = rNum.getQuantity(); //rank
+                  cell4.innerHTML = results2[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"].slice(1); //removes initial 0
+                  cell5.innerHTML = results2[index]["value"]["fastestTimeSimple"];
+                  cell6.innerHTML = calculateDifference(results2[index]["value"]["ghosts"]["0"]["finishTimeSimple"],results2[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"]);
+                  cell7.innerHTML = getCharacter(results2[index]["value"]["ghosts"][ghostLoc]["driverId"]);
+                  cell8.innerHTML = getVehicle(results2[index]["value"]["ghosts"][ghostLoc]["vehicleId"]);
+                  cell9.innerHTML = getController(results2[index]["value"]["ghosts"][ghostLoc]["controller"]);
+                  cell10.innerHTML = results2[index]["value"]["ghosts"][ghostLoc]["dateSet"].slice(0,10);
+                  cell11.innerHTML = getRecordDuration(results2[index]["value"]["ghosts"][ghostLoc]["dateSet"]);
+      
+                  allPersonalRecords.push(results2[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"]);
+                  csvList.unshift([results2[index]["value"]["name"],categories2[j],rNum.getQuantity(),
+                    results2[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"].slice(1), results2[index]["value"]["ghosts"][ghostLoc]["player"],
+                    getCharacter(results2[index]["value"]["ghosts"][ghostLoc]["driverId"]),getVehicle(results2[index]["value"]["ghosts"][ghostLoc]["vehicleId"]),
+                    results2[index]["value"]["ghosts"][ghostLoc]["dateSet"].slice(0,10),getRecordDuration(results2[index]["value"]["ghosts"][ghostLoc]["dateSet"]),
+                    getController(results2[index]["value"]["ghosts"][ghostLoc]["controller"]),results2[index]["value"]["ghosts"][ghostLoc]["wasWr"]]);
+                }
+                else if (timesheet.checked) {
+                  csvList.unshift([results[index]["value"]["name"],categories2[j]]);
+                }
+              }
+              csvList.sort(function(a, b) { //simple sort was not working
+                let nameA = a[0].toUpperCase(), nameB = b[0].toUpperCase();
+                if(nameA < nameB) { return -1; }
+                if(nameA > nameB) { return 1; }
+                return 0;
+              });
+              csvList.unshift(["Track Name","Category","Rank","Time","Mii","Character","Vehicle","Date","Duration","Controller","Was WR?"]); //create csv headers after sorting
+              createCSV(allPersonalRecords,csvList);
+              if (failedFetches.length>0) {
+                let failedTracks = "";
+                for (let x=0; x < failedFetches.length; x++) {
+                  failedTracks += `${failedFetches[x]}, `;//let user know which tracks failed to load
+                }
+                alert(`Some leaderboards failed to load and were unable to be checked, those tracks were ${failedTracks}`);
+              }
+            })//second pass
+          })//sleep
         }
         else {
-          alert("Main database hasn't responded, chadsoft server is most likely down or running slowly. Try Again Later.")
+          createCSV(allPersonalRecords,csvList);
         }
+      })//first pass
+    .catch((err) => {
+      console.log(err);
+      console.log("Failed Fetching Main Leaderboard or another Fatal Error");
+      alert("An internal error has happened.")
     });
-
-    if (retryfetches.length>1) {
-      console.log(retryfetches);
-      let fetches2 = retryfetches.map(url => fetch(url).then(res => res.json()));
-
-      Promise.allSettled(fetches2)
-        .then((results2) => {
-          console.log(results2);
-          let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
-          let failedFetches = [], count = 0;
-          for (let j=0;j<results2.length;j++) {
-            let rNum = [], index = `${j}`;
-            if (results2[index]["status"] === "rejected") {
-              console.log(mainLB["leaderboards"][index]["name"] + "Failed to fetch");
-              csvList.push([mainLB["leaderboards"][index]["name"]]);
-              failedFetches.push(mainLB["leaderboards"][index]["name"]);
-              continue;
-            }
-            let recordTime = mainLB["leaderboards"][index]["fastestTimeSimple"], //00:00.000
-            category = determineCategory(mainLB,recordTime,index,j);
-
-            if (rNum = inTopTen(results2[index]["value"]["ghosts"],playerID.value)) {
-              count++;
-              let ghostLoc = rNum.getName(); //top 10 ghost index, string
-              let row = myTable.insertRow();
-              let cell1 = row.insertCell(0),
-              cell2 = row.insertCell(1),
-              cell3 = row.insertCell(2),
-              cell4 = row.insertCell(3),
-              cell5 = row.insertCell(4),
-              cell6 = row.insertCell(5),
-              cell7 = row.insertCell(6),
-              cell8 = row.insertCell(7),
-              cell9 = row.insertCell(8),
-              cell10 = row.insertCell(9),
-              cell11 = row.insertCell(10);
-
-              cell1.innerHTML = mainLB["leaderboards"][index]["name"];
-              cell2.innerHTML = category;
-              cell3.innerHTML = rNum.getQuantity(); //rank
-              cell4.innerHTML = results2[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"].slice(1); //removes initial 0
-              cell5.innerHTML = recordTime;
-              cell6.innerHTML = calculateDifference(results2[index]["value"]["ghosts"]["0"]["finishTimeSimple"],results2[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"]);
-              cell7.innerHTML = getCharacter(results2[index]["value"]["ghosts"][ghostLoc]["driverId"]);
-              cell8.innerHTML = getVehicle(results2[index]["value"]["ghosts"][ghostLoc]["vehicleId"]);
-              cell9.innerHTML = getController(results2[index]["value"]["ghosts"][ghostLoc]["controller"]);
-              cell10.innerHTML = results2[index]["value"]["ghosts"][ghostLoc]["dateSet"].slice(0,10);
-              cell11.innerHTML = getRecordDuration(results2[index]["value"]["ghosts"][ghostLoc]["dateSet"]);
-
-              //allRecords.push(recordTime);
-              allPersonalRecords.push(results2[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"]);
-              csvList.push([mainLB["leaderboards"][index]["name"],category,rNum.getQuantity(),results2[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"].slice(1),
-                results2[index]["value"]["ghosts"][ghostLoc]["player"],
-                getCharacter(results2[index]["value"]["ghosts"][ghostLoc]["driverId"]),getVehicle(results2[index]["value"]["ghosts"][ghostLoc]["vehicleId"]),
-                results2[index]["value"]["ghosts"][ghostLoc]["dateSet"].slice(0,10),getRecordDuration(results2[index]["value"]["ghosts"][ghostLoc]["dateSet"]),
-                getController(results2[index]["value"]["ghosts"][ghostLoc]["controller"]),results2[index]["value"]["ghosts"][ghostLoc]["wasWr"]]);
-            }
-
-          }
-          csvList.sort(sortByFirstArrayElement);
-          csvList.push([`Total Ghosts: ${count}`," ",`Total Personal Time: ${addGhostTimes(allPersonalRecords)}`]);
-          console.log(csvList);
-          var csv = 'data:text/csv;charset=utf-8,' + csvList.map(e => e.join(",")).join("\n");
-          let data = encodeURI(csv);
-          console.log(data);
-    
-          let testDownload = document.createElement('a');
-          testDownload.appendChild(document.createTextNode("Download Timesheet Here"));
-          testDownload.id="download";
-          testDownload.setAttribute('href',data);
-          testDownload.setAttribute('download', 'exports.csv');
-          //testDownload.click();
-          document.body.appendChild(testDownload);
-
-          document.body.appendChild(createHeaderTwo(`Overall Combined Time: ${addGhostTimes(allPersonalRecords)}`));
-          document.body.appendChild(createHeaderTwo(`Total Times: ${count}`));
-          console.log(failedFetches);
-          urlList = [];
-        })
-        .catch((err) => {
-          console.log(err);
-          console.log("Failed Fetching Main Leaderboard or another Fatal Error");
-          if (element) {
-            alert("An internal error has happened.")
-          }
-          else {
-            alert("Main database hasn't responded, chadsoft server is most likely down or running slowly. Try Again Later.")
-          }
-    });}
-    else {
-      csvList.push([`Total Ghosts: ${count}`," ",`Total Personal Time: ${addGhostTimes(allPersonalRecords)}`]);
-      console.log(csvList);
-      var csv = 'data:text/csv;charset=utf-8,' + csvList.map(e => e.join(",")).join("\n");
-      let data = encodeURI(csv);
-      console.log(data);
-
-      let testDownload = document.createElement('a');
-      testDownload.appendChild(document.createTextNode("Download Timesheet Here"));
-      testDownload.id="download";
-      testDownload.setAttribute('href',data);
-      testDownload.setAttribute('download', 'exports.csv');
-      //testDownload.click();
-      document.body.appendChild(testDownload);
-
-      document.body.appendChild(createHeaderTwo(`Overall Combined Time: ${addGhostTimes(allPersonalRecords)}`));
-      document.body.appendChild(createHeaderTwo(`Total Times: ${count}`));
-      console.log(failedFetches);
-      urlList = [];
-    }
   })}) //tag closures from original fetch statement
 }
 
@@ -747,6 +714,30 @@ function createTableChartDiv(index) {
   return div;
 }
 
+/** Create csv download
+ * @param {Array} allPersonalRecords 
+ * @param {Array} csvList */
+function createCSV(allPersonalRecords,csvList) {
+  csvList.push([`Total Ghosts: ${allPersonalRecords.length}`," ",`Total Personal Time: ${addGhostTimes(allPersonalRecords)}`]);
+  var csv = 'data:text/csv;charset=utf-8,' + csvList.map(e => e.join(",")).join("\n");
+  let data = encodeURI(csv);
+
+  let testDownload = document.createElement('a');
+  testDownload.appendChild(document.createTextNode("Download Timesheet Here"));
+  testDownload.id="download";
+  testDownload.setAttribute('href',data);
+  testDownload.setAttribute('download', 'exports.csv');
+  //testDownload.click();
+  document.body.appendChild(testDownload);
+
+  let timeTotal = createHeaderTwo(`Overall Combined Time: ${addGhostTimes(allPersonalRecords)}`);
+  timeTotal.id = "timeTotal";
+  document.body.appendChild(timeTotal);
+  let personalTotal = createHeaderTwo(`Total Times: ${allPersonalRecords.length}`);
+  personalTotal.id = "personalTotal";
+  document.body.appendChild(personalTotal);
+}
+
 /** creates large table header, takes a row and 11 strings */
 function createTableHeader11(row,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) {
   let cellt1 = row.insertCell(0),
@@ -777,6 +768,12 @@ function createTableHeader11(row,t1,t2,t3,t4,t5,t6,t7,t8,t9,t10,t11) {
 /*****************************************************************************/
 /*                              Helper Functions                             */
 /*****************************************************************************/
+
+
+/** sleep for a certain amount of time 1000=1 second */
+function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
+}
 
 /** use with JS sort method, sorts Node array by its name */
 function sortNodeByName(a,b) {
@@ -884,21 +881,24 @@ function getMonthBundleByYear(dataset,year) {
   return {name: year,data: months};
 }
 
-/** checks if playerId is in top 10
+/** finds highest ranking ghost for a LB for a playerID
  * @param {Array} dataset 
  * @param {string} id 
+ * @param {Boolean} wholeLB //timesheet.checked
  * @returns NameQuantityNode(ghost index,rank) */
-function inTopTen(dataset,id) {
-  let count = 0; //keeps track of unique players in top 10, breaks if more than 10
+function findGhostRank(dataset,id,wholeLB) {
+  let count = 0, maximum = 10; //keeps track of unique players, ie top 10
   const str = id.toUpperCase();
-  for (let i=0;i<dataset.length;i++) {
-    if (dataset[i]["playersFastest"]) {count++;}
-    if (count>dataset.length) { //["uniquePlayers"]
-      console.log("player not found at: "+dataset[i]["name"]);
-      break;
-    }
-    if (dataset[i]["playerId"]===str) {return new NameQuantityNode(i,count);}
+  if (wholeLB) {maximum = parseInt(dataset["uniquePlayers"]);}
+  for (let i=0;i<dataset["ghosts"].length;i++) {
+    if (dataset["ghosts"][i]["playersFastest"]) {count++;}
+    if (count>maximum) {break;}
+    if (dataset["ghosts"][i]["playerId"]===str) {return new NameQuantityNode(i,count);}
   }
+  if (count<=10 && dataset["ghosts"].length===100) {
+    console.log(dataset["name"]+" is a large LB, increase fetch size immediately."); 
+  }
+  console.log("player not found at: "+dataset["name"]);
   return false;
 }
 
@@ -1102,7 +1102,7 @@ function displayTopTen(dataset) {
   }
 }
 
-/** Uses simple ghost time, 
+/** Uses simple ghost times and totals them
  * @param {Array} totalTimes 
  * @returns String, total ghost times */
 function addGhostTimes(totalTimes) {
@@ -1133,7 +1133,7 @@ function addGhostTimes(totalTimes) {
   if (milliseconds<10) {
     milliseconds = `00${milliseconds}`;
   }
-  else if (seconds<100) {
+  else if (milliseconds<100) {
     milliseconds = `0${milliseconds}`;
   }
   return `${hours}:${minutes}:${seconds}.${milliseconds}`;
@@ -1478,6 +1478,8 @@ function getPlayerAndRegion(x) {
     case 'C99960EDB3B7890D': return ["Zi","images/FR.png"];
     case 'CCE38AAD3BA3CEEF': return ["Soggy","images/US.png"];
     case '580AD241ABC962FC': return ["FoxAmexion","images/US.png"];
+    case '987EE0EB54AB18BF': return ["Suciorap","images/GB.png"];
+    case '1875A48ED14ED211': case '54F2148B6C7083A3': return ["Coby","images/GB.png"]
     case '79464E926AE9EECD': case '5E155CC9E1788D49': return ["Fraterz","images/US.png"];
     case '73B48F99FD87462F': case '552A7CC576D11D56': return ["Yoshi","images/US.png"];
     case '19B2986D5A69260B': case '890E6F8CCB86DA53': return ["Reece","images/US.png"];
