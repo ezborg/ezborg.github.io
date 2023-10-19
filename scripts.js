@@ -64,7 +64,6 @@ function loadLeaderboard(load) {
   } //FUTURE if new params found: url.searchParams.set("limit",1) */
 
   for (let i=0;i<mainLB["leaderboards"].length;i++) {
-    /*
     category = determineCategory(mainLB,mainLB["leaderboards"][`${i}`]["fastestTimeSimple"],`${i}`,i);
     trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
 
@@ -72,7 +71,7 @@ function loadLeaderboard(load) {
       console.log(mainLB["leaderboards"][`${i}`]["name"] + "Slow glitch");
       continue;
     }
-    categories.push(category); */
+    categories.push(category);
     urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=1');
   }
   let fetches = urlList.map(url => fetch(url).then(res => res.json()));
@@ -85,21 +84,14 @@ function loadLeaderboard(load) {
       let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
       //create header row and init body row
 
-      let category = 'Normal', screenName = '', allDates = [], allYears = [], allRecords = [],
+      let screenName = '', allDates = [], allYears = [], allRecords = [],
       vehicleTally = [], characterTally = [], controllerTally = [], playerTally = [], 
       glitchTally = [], noGlitchTally = [], countryTally = [], orderedDuration = [];
-      //declare category and arrays
+      //declare arrays
 
       for (let j=0;j<results.length;j++) {
 
         let index = `${j}`;
-        let recordTime = mainLB["leaderboards"][index]["fastestTimeSimple"], //00:00.000
-        recordDate = mainLB["leaderboards"][index]["fastestTimeLastChange"].slice(0,10); //UTC Time Date
-        duration = getRecordDuration(recordDate);
-        category = determineCategory(mainLB,recordTime,index,j);
-        allRecords.push(recordTime);
-        if (category==="Slower-Glitch") {continue;} //prevent slow glitches or broken categories from displaying on leaderboard
-
         let row = myTable.insertRow();
         let cell1 = row.insertCell(0), cell2 = row.insertCell(1),
         cell3 = row.insertCell(2), cell4 = row.insertCell(3),
@@ -111,25 +103,29 @@ function loadLeaderboard(load) {
 
         if (results[index]["status"] === "rejected") {
           //display generic track info with main leaderboard if a track leaderboard fails, restarts loop
-          cell1.innerHTML = mainLB["leaderboards"][index]["name"];
-          cell2.innerHTML = category;
-          cell3.innerHTML = recordTime.slice(1);
+          let failedTrack = trackIds.indexOf(urlList[index].slice(41,81));
+          cell1.innerHTML = mainLB["leaderboards"][`${failedTrack}`]["name"];
+          cell2.innerHTML = categories[j];
+          cell3.innerHTML = mainLB["leaderboards"][`${failedTrack}`]["fastestTimeSimple"].slice(1);
           cell4.innerHTML = "-";
           cell5.innerHTML = "Failed";
           cell6.innerHTML = "to";
           cell7.innerHTML = "fetch";
           cell8.innerHTML = "ghost";
           cell9.innerHTML = "-";
-          cell10.innerHTML = recordDate;
-          cell11.innerHTML = duration;
-          console.log('Failed Fetching Record for: '+mainLB["leaderboards"][index]["name"]);
+          cell10.innerHTML = mainLB["leaderboards"][`${failedTrack}`]["fastestTimeLastChange"].slice(0,10);
+          cell11.innerHTML = getRecordDuration(mainLB["leaderboards"][`${failedTrack}`]["fastestTimeLastChange"].slice(0,10));
+          console.log('Failed Fetching Record for: '+mainLB["leaderboards"][`${failedTrack}`]["name"]);
+          allRecords.push(mainLB["leaderboards"][`${failedTrack}`]["fastestTimeSimple"]);
           continue;
         }
 
         let player = getPlayerAndRegion(results[index]["value"]["ghosts"]["0"]["playerId"]),
         currentVehicle=getVehicle(results[index]["value"]["ghosts"]["0"]["vehicleId"]),
         currentCharacter=getCharacter(results[index]["value"]["ghosts"]["0"]["driverId"]),
-        currentController=getController(results[index]["value"]["ghosts"]["0"]["controller"]);
+        currentController=getController(results[index]["value"]["ghosts"]["0"]["controller"]),
+        recordDate = results[index]["value"]["ghosts"]["0"]["dateSet"].slice(0,10); //UTC Time Date
+        duration = getRecordDuration(recordDate);
         //getting strings from switch case statements
 
         if (player[0]!="Unknown") {
@@ -141,7 +137,7 @@ function loadLeaderboard(load) {
           if (toBeAdded = addToArray(player[1].slice(7,9),countryTally)) {
             countryTally.push(new NameQuantityNode(player[1].slice(7,9),1,player[1]))
           }
-          if (category==="Glitch") {
+          if (categories[j]==="Glitch") {
             if (toBeAdded = addToArray(player[0],glitchTally)) {glitchTally.push(new NameQuantityNode(player[0],1,player[1]))}
           }
           else {
@@ -150,12 +146,13 @@ function loadLeaderboard(load) {
           screenName = player[0];
         }
         else {
-          console.log("Missing player entry at: "+mainLB["leaderboards"][index]["name"]+": "+category);
+          console.log("Missing player entry at: "+results[index]["value"]["name"]+": "+categories[j]);
           screenName = checkDefaultMii(results[index]["value"]["ghosts"]["0"]["player"]);
         }
 
         allDates.push(recordDate);
-        orderedDuration.push(new NameQuantityNode(mainLB["leaderboards"][index]["name"]+": "+category,duration,recordDate,player[0]));
+        allRecords.push(results[index]["value"]["fastestTimeSimple"]);
+        orderedDuration.push(new NameQuantityNode(results[index]["value"]["name"]+": "+categories[j],duration,recordDate,player[0]));
         //these two are always pushed to
 
         if (toBeAdded = addToArray(recordDate.slice(0,4),allYears)) {
@@ -177,8 +174,8 @@ function loadLeaderboard(load) {
         //add ghost data to arrays
 
         cell1.innerHTML = results[index]["value"]["name"];
-        cell2.innerHTML = category;
-        cell3.innerHTML = recordTime.slice(1); //removes initial 0
+        cell2.innerHTML = categories[j];
+        cell3.innerHTML = results[index]["value"]["fastestTimeSimple"].slice(1); //removes initial 0
         cell4.innerHTML = screenName;
         cell5.innerHTML = checkDefaultMii(results[index]["value"]["ghosts"]["0"]["player"]);
         cell6.appendChild(createImage(player[1]));
@@ -219,7 +216,6 @@ function loadLeaderboard(load) {
       displayBar("years",yearSplit[0],yearSplit[1]); //bar charts
       displayBar("dates",getMonths(allDates),["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"]);
       createRedirect();
-      urlList = [];
   })
     .catch((err) => {
       console.log(err);
@@ -299,7 +295,7 @@ function topsByPID() {
   let ctgp150 = document.getElementById("150CTGP"), ctgp200 = document.getElementById("200CTGP"),
   nin200 = document.getElementById("200NIN"), playerID = document.getElementById("playerID"),
   timesheet = document.getElementById("Timesheet?"), load = "https://tt.chadsoft.co.uk/original-track-leaderboards-200cc.json",
-  urlList = [], allPersonalRecords = [], retryfetches = [], failedFetches = [], categories = [], categories2 = [], csvList = [],
+  urlList = [], allPersonalRecords = [], retryfetches = [], failedFetches = [], trackIds = [], categories = [], categories2 = [], csvList = [],
   uniqueCheck = onlyOneCheckmark(ctgp150,ctgp200,nin200);
 
   //check if a leaderboard is built and remove it
@@ -1362,6 +1358,7 @@ function getPlayerAndRegion(x) {
     case '6D50919C1845009D': return ["Justin","images/US.png"];
     case '408FC6D7350F9236': return ["Carter","images/US.png"];
     case '5F59DD451DEC7880': return ["Boodog","images/US.png"];
+    case '22475C923D0935C9': return ["Sardine","images/US.png"];
     case 'CBF0CD7528C9C863': return ["Hintz","images/DE.png"];
     case 'E7003EE0EFA24466': return ["Fernandez","images/US.png"];
     case '92C14478FD19D33F': return ["Brody","images/US.png"];
@@ -1479,6 +1476,7 @@ function getPlayerAndRegion(x) {
     case 'CCE38AAD3BA3CEEF': return ["Soggy","images/US.png"];
     case '580AD241ABC962FC': return ["FoxAmexion","images/US.png"];
     case '987EE0EB54AB18BF': return ["Suciorap","images/GB.png"];
+    case "85419B3C48F157C7": return ["Flairy","images/GB.png"];
     case '1875A48ED14ED211': case '54F2148B6C7083A3': return ["Coby","images/GB.png"]
     case '79464E926AE9EECD': case '5E155CC9E1788D49': return ["Fraterz","images/US.png"];
     case '73B48F99FD87462F': case '552A7CC576D11D56': return ["Yoshi","images/US.png"];
@@ -1489,7 +1487,6 @@ function getPlayerAndRegion(x) {
     case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];
     case '6C37FC09DD67E33B': case '271EC09BB2E937BB': return ["Bickbork","images/US.png"];
     case 'B9AB2EC621E671DB': case 'E659F91B99D78CA8': return ["Will","images/US.png"];
-    case '22475C923D0935C9': case '8DBC8088D4206570': return ["Sardine","images/US.png"];
     case '40B20BE4FD8CA88C': case 'AEEB0474F0DEABF8': case 'D8EEEF0F2872E83F': return ["καgυγα","images/JP.png"];
     case '2240C482ADD7E0D3': case '2CC8A5568F7A106B': case '8A1F856DCE285FEF': return ["Scorpi","images/GB.png"];
     default: return ["Unknown","images/unknown.png"];

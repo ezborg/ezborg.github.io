@@ -134,6 +134,8 @@
 {"playerID": "CCE38AAD3BA3CEEF", "playerName": "Soggy","countryID": "images/US.png"},
 {"playerID": "580AD241ABC962FC", "playerName": "FoxAmexion","countryID": "images/US.png"},
 {"playerID": "987EE0EB54AB18BF", "playerName": "Suciorap","countryID": "images/GB.png"},
+{"playerID": "22475C923D0935C9", "playerName": "Sardine", "countryID": "images/US.png"},
+{"playerID": "85419B3C48F157C7", "playerName": "Flairy", "countryID": "images/GB.png"},
 
 {"playerID": ["1875A48ED14ED211","54F2148B6C7083A3"], "playerName": "Coby","countryID": "images/GB.png"},
 {"playerID": ["79464E926AE9EECD","5E155CC9E1788D49"], "playerName": "Fraterz", "countryID": "images/US.png"},
@@ -145,7 +147,6 @@
 {"playerID": ["D0E4D8B03A9A5849","D0164155D1E00C2F"], "playerName": "Sawyer", "countryID": "images/US.png"},
 {"playerID": ["6C37FC09DD67E33B","271EC09BB2E937BB"], "playerName": "Bickbork", "countryID": "images/US.png"},
 {"playerID": ["B9AB2EC621E671DB","E659F91B99D78CA8"], "playerName": "Will", "countryID": "images/US.png"},
-{"playerID": ["22475C923D0935C9","8DBC8088D4206570"], "playerName": "Sardine", "countryID": "images/US.png"},
 {"playerID": ["40B20BE4FD8CA88C","AEEB0474F0DEABF8","D8EEEF0F2872E83F"], "playerName": ["καgυγα","Kaguya"], "countryID": "images/JP.png"},
 {"playerID": ["2240C482ADD7E0D3","2CC8A5568F7A106B","8A1F856DCE285FEF"], "playerName": "Scorpi", "countryID": "images/GB.png"}
 ]
