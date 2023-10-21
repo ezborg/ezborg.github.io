@@ -12,16 +12,25 @@
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     </head>
     <body>
+        <button class="darkmode-toggle" onclick="toggleDarkMode()">
+            <div>
+                <p id="darkmode-text">Dark Mode</p>
+                <img src="images/darkmode.svg"/>
+            </div>
+        </button>
         <header>
             <h1>Welcome to Sardine's personal website</h1>
             <hr>
             <nav>
                 <image src="images/funky.webp" alt="funk" height="100">
-                <a href="records.html">150cc CTGP Records</a> -------
-                <a href="recordstwo.html">200cc CTGP Records</a> -------
-                <a href="recordsnin.html">200cc Nintendo Records</a> -------
-                <a href="tops.html">Tops or Timesheet</a> -------
-                <a href="playerlookup.html">Search for playerID</a>
+                <div>
+                    <a href="index.html" class="selected">Home</a>
+                    <a href="records.html">150cc CTGP Records</a>
+                    <a href="recordstwo.html">200cc CTGP Records</a>
+                    <a href="recordsnin.html">200cc Nintendo Records</a>
+                    <a href="tops.html">Tops or Timesheet</a>
+                    <a href="playerlookup.html">Search for playerID</a>
+                </div>
                 <image src="images/wario.webp" alt="buns" height="100">
             </nav>
             <hr>
@@ -55,5 +64,7 @@
             <li><a href="https://www.mkwlounge.gg/">Lounge Leaderboard.</a></li>
             <li><a href="mailto:123sardines@gmail.com">Site Issue? Email.</a></li>
         </ul>
+        
+        <script src="scripts.js"></script>
     </body>
 </html>

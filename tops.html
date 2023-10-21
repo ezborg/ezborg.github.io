@@ -11,18 +11,30 @@
         <link href="styles.css" rel="stylesheet" type="text/css">
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-        <script src="scripts.js"></script>
     </head>
     <body>
+        <button class="darkmode-toggle" onclick="toggleDarkMode()">
+            <div>
+                <p id="darkmode-text">Dark Mode</p>
+                <img src="images/darkmode.svg"/>
+            </div>
+        </button>
         <header>
             <h1> Search for Top 10 Times or download Timesheet </h1>
+            <hr>
             <nav>
-                <a href="index.html">Home</a> -------
-                <a href="records.html">150cc CTGP Records</a> -------
-                <a href="recordstwo.html">200cc CTGP Records</a> -------
-                <a href="recordsnin.html">200cc Nintendo Records</a> -------
-                <a href="playerlookup.html" target="_blank">Search for playerID</a>
+                <image src="images/funky.webp" alt="funk" height="100">
+                <div>
+                    <a href="index.html">Home</a>
+                    <a href="records.html">150cc CTGP Records</a>
+                    <a href="recordstwo.html">200cc CTGP Records</a>
+                    <a href="recordsnin.html">200cc Nintendo Records</a>
+                    <a href="tops.html" class="selected">Tops or Timesheet</a>
+                    <a href="playerlookup.html">Search for playerID</a>
+                </div>
+                <image src="images/wario.webp" alt="buns" height="100">
             </nav>
+            <hr>
         </header>
         <p> A table will display your top 10 times or entire timesheet. 
             Top ten times take about 3 minutes while timesheets can be closer to 20 minutes.
@@ -44,20 +56,28 @@
         or find it on <a href="https://www.chadsoft.co.uk/time-trials/players.html"> Chadsoft </a>.
         </p>
         <image src="images/playerID.png" alt="playerPage" height="200"><br>
-        <p> Choose your leaderboard <b>(Only one at a time)</b> </p>
+        <p> Choose your leaderboard</p>
         <div class="triple-grid">
             <div>
-                <label for="150CTGP">150cc CTGP:</label>
-                <input type="checkbox" id="150CTGP" name="150CTGP" value="150CTGP">
+                <label>
+                    150cc CTGP:
+                    <input type="radio" id="150CTGP" name="leaderboardRadio" value="150CTGP">
+                </label>
             </div>
             <div>
-                <label for="200CTGP">200cc CTGP:</label>
-                <input type="checkbox" id="200CTGP" name="200CTGP" value="200CTGP">
+                <label>
+                    200cc CTGP:
+                    <input type="radio" id="200CTGP" name="leaderboardRadio" value="200CTGP">
+                </label>
             </div>
             <div>
-                <label for="200NIN">200cc Nintendo:</label>
-                <input type="checkbox" id="200NIN" name="200NIN" value="200NIN">
+                <label>
+                    200cc Nintendo:
+                    <input type="radio" id="200NIN" name="leaderboardRadio" value="200NIN">
+                </label>
             </div>
         </div>
+
+        <script src="scripts.js"></script>
     </body>
 </html>

@@ -11,18 +11,28 @@
         <link href="styles.css" rel="stylesheet" type="text/css">
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-        <script src="scripts.js"></script>
     </head>
     <body onload="loadLeaderboard('https://tt.chadsoft.co.uk//ctgp-leaderboards.json')">
+        <button class="darkmode-toggle" onclick="toggleDarkMode()">
+            <div>
+                <p id="darkmode-text">Dark Mode</p>
+                <img src="images/darkmode.svg"/>
+            </div>
+        </button>
         <header>
             <h1> All Current CTGP Records </h1>
             <hr>
             <nav>
-                <a href="index.html">Home</a> -------
-                <a href="recordstwo.html">200cc CTGP Records</a> -------
-                <a href="recordsnin.html">200cc Nintendo Records</a> -------
-                <a href="tops.html">Tops or Timesheet</a> -------
-                <a href="playerlookup.html">Search for playerID</a>
+                <image src="images/funky.webp" alt="funk" height="100">
+                <div>
+                    <a href="index.html">Home</a>
+                    <a href="records.html" class="selected">150cc CTGP Records</a>
+                    <a href="recordstwo.html">200cc CTGP Records</a>
+                    <a href="recordsnin.html">200cc Nintendo Records</a>
+                    <a href="tops.html">Tops or Timesheet</a>
+                    <a href="playerlookup.html">Search for playerID</a>
+                </div>
+                <image src="images/wario.webp" alt="buns" height="100">
             </nav>
             <hr>
         </header>
@@ -37,5 +47,7 @@
             <a href="#playerList">Player Stats</a><br>
             <a href="#vehicleList">Ghost Stats</a>
         </p>
+
+        <script src="scripts.js"></script>
     </body>
 </html>

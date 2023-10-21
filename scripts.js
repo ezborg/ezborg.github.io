@@ -642,6 +642,7 @@ function createHeaderTwo(text) {
 function createChart(index) {
   let divChart = document.createElement("div");
   divChart.id = tableInfo[index]["chart"].slice(1);
+  divChart.classList.add("chart");
   return divChart;
 }
 
@@ -1212,6 +1213,37 @@ function determineCategory(mainLB,recordTime,index,j) {
   return category;
 }
 
+/*****************************************************************************/
+/*                          Dark Mode Functionality                          */
+/*****************************************************************************/
+
+let darkModeText = document.getElementById("darkmode-text");
+
+function toggleDarkMode() {
+  if (localStorage.theme == null) {
+    const prefersDarkMode = window.matchMedia('(prefers-color-scheme: dark)').matches;
+    if (prefersDarkMode) localStorage.theme = "dark";
+    else localStorage.theme = "light";
+  }
+
+  if (localStorage.theme === "light") {
+    localStorage.theme = "dark";
+    document.documentElement.dataset.theme = "dark";
+    darkModeText.innerText = "Light Mode";
+  }
+  else {
+    localStorage.theme = "light";
+    delete document.documentElement.dataset.theme; 
+    darkModeText.innerText = "Dark Mode";
+  }
+}
+
+addEventListener("DOMContentLoaded", () => {
+  if (localStorage.theme === 'dark' || (!('theme' in localStorage) && window.matchMedia('(prefers-color-scheme: dark)').matches)) {
+    document.documentElement.dataset.theme = "dark";
+    darkModeText.innerText = "Light Mode";
+  }
+})
 
 /*****************************************************************************/
 /*                          Switch Case Statments                            */
