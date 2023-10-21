@@ -10,9 +10,9 @@ largeCategories = ["GCN Baby Park","Jungle Jamble","Undiscovered Offlimit","Wetl
 
 let urlList = [], categories = [], trackIds = []; //trackIds and categories arrays are used to find data in first mainLB fetch because not all leaderboards are fetched afterwards
 const leaderboardsURLS = {
-  '150C': 'https://tt.chadsoft.co.uk/ctgp-leaderboards.json',
-  '200C': 'https://tt.chadsoft.co.uk/ctgp-leaderboards-200cc.json',
-  '200N': 'https://tt.chadsoft.co.uk/original-track-leaderboards-200cc.json'
+  '150CTGP': 'https://tt.chadsoft.co.uk/ctgp-leaderboards.json',
+  '200CTGP': 'https://tt.chadsoft.co.uk/ctgp-leaderboards-200cc.json',
+  '200NIN': 'https://tt.chadsoft.co.uk/original-track-leaderboards-200cc.json'
 }
 
 class NameQuantityNode {
@@ -292,11 +292,10 @@ function PlayersPageAndPIDbyPlayerName() {
 Searches once and then searches again, fetching a lot of data so at least one fetch fails typically
 */
 function topsByPID() {
-  let ctgp150 = document.getElementById("150CTGP"), ctgp200 = document.getElementById("200CTGP"),
-  nin200 = document.getElementById("200NIN"), playerID = document.getElementById("playerID"),
-  timesheet = document.getElementById("Timesheet?"), load = "https://tt.chadsoft.co.uk/original-track-leaderboards-200cc.json",
-  urlList = [], allPersonalRecords = [], retryfetches = [], failedFetches = [], trackIds = [], categories = [], categories2 = [], csvList = [],
-  uniqueCheck = onlyOneCheckmark(ctgp150,ctgp200,nin200);
+  let playerID = document.getElementById("playerID"),
+  timesheet = document.getElementById("Timesheet?"),
+  urlList = [], allPersonalRecords = [], retryfetches = [], failedFetches = [],
+  trackIds = [], categories = [], categories2 = [], csvList = [];
 
   //check if a leaderboard is built and remove it
   const element = document.getElementById("main");
@@ -310,12 +309,11 @@ function topsByPID() {
     element4.remove();
   }
 
-  if (uniqueCheck && playerID.value.length===16) {
-    load = leaderboardsURLS[uniqueCheck];
+  if (playerID.value.length===16) {
+    load = leaderboardsURLS[document.querySelector('input[name="leaderboardRadio"]:checked').value];
   }
   else {
-    alert("Need to choose a leaderboard or too many leaderboards chosen or invalid playerID!");
-    console.log("fail");
+    alert("Invalid playerID!");
     return;
   }
 
@@ -897,26 +895,6 @@ function findGhostRank(dataset,id,wholeLB) {
   }
   console.log("player not found at: "+dataset["name"]);
   return false;
-}
-
-/** check if only 1 checkbox is checked and which one
- * @param {checkbox} c1 
- * @param {checkbox} c2 
- * @param {checkbox} c3 
- * @returns string key for URL or false */
-function onlyOneCheckmark(c1,c2,c3) {
-  if (c1.checked == true) {
-    if (c2.checked || c3.checked) {return false;}
-    return "150C";
-  }
-  if (c2.checked == true) {
-    if (c1.checked || c3.checked) {return false;}
-    return "200C";
-  }
-  if (c3.checked == true) {
-    if (c2.checked || c1.checked) {return false;}
-    return "200N";
-  }
 }
 
 /** two strings style XX:XX.XXX
@@ -1508,7 +1486,8 @@ function getPlayerAndRegion(x) {
     case 'CCE38AAD3BA3CEEF': return ["Soggy","images/US.png"];
     case '580AD241ABC962FC': return ["FoxAmexion","images/US.png"];
     case '987EE0EB54AB18BF': return ["Suciorap","images/GB.png"];
-    case "85419B3C48F157C7": return ["Flairy","images/GB.png"];
+    case '85419B3C48F157C7': return ["Flairy","images/GB.png"];
+    case 'F68757434F0AA9F0': return ["Mitch","images/AU.png"];
     case '1875A48ED14ED211': case '54F2148B6C7083A3': return ["Coby","images/GB.png"]
     case '79464E926AE9EECD': case '5E155CC9E1788D49': return ["Fraterz","images/US.png"];
     case '73B48F99FD87462F': case '552A7CC576D11D56': return ["Yoshi","images/US.png"];
