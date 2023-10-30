@@ -68,7 +68,7 @@ function loadLeaderboard(load) {
     trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
 
     if (category==="Slower-Glitch") { //prevent slow glitches from displaying
-      console.log(mainLB["leaderboards"][`${i}`]["name"] + "Slow glitch");
+      //console.log(mainLB["leaderboards"][`${i}`]["name"] + "Slow glitch");
       continue;
     }
     categories.push(category);
@@ -248,8 +248,14 @@ function PlayersPageAndPIDbyPlayerName() {
 
   fetch('./players.json').then(mainRes => {mainRes.json().then(playersPage => {this.playersPage = playersPage;
     for (let i=0;i<playersPage.length;i++) {
-      if (playersPage[i].playerName.includes(inputtedName.value)) {
-        console.log(playersPage[i].playerID);
+      let array = playersPage[i].playerName;
+      if (playersPage[i].playerName[0].length === 1) { //playersPage[i].playerName[0].length = 1 when only 1 name is present and therefore not an array
+        array = playersPage[i].playerName.toUpperCase();
+      }
+      else {
+        array = array.map(function(x) {return x.toUpperCase();})
+      }
+      if (array.includes(inputtedName.value.toUpperCase())) {
         index = i;
         break;
       }
@@ -258,7 +264,6 @@ function PlayersPageAndPIDbyPlayerName() {
     let urlDiv = document.createElement("div");
     urlDiv.id = "d1";
     if (index==0) {
-      console.log("player not found");
       simpleIDs+="Player not found";
       urlDiv.appendChild(createHeaderTwo("Player not found"));
     }
@@ -324,10 +329,7 @@ function topsByPID() {
         category = determineCategory(mainLB,mainLB["leaderboards"][`${i}`]["fastestTimeSimple"],`${i}`,i);
         trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
     
-        if (category==="Slower-Glitch") { //prevent slow glitches from displaying
-          console.log(mainLB["leaderboards"][`${i}`]["name"] + "Slow glitch");
-          continue;
-        }
+        if (category==="Slower-Glitch") {continue;} //prevent slow glitches from displaying
         urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]);
         categories.push(category);
       }
@@ -337,10 +339,7 @@ function topsByPID() {
         category = determineCategory(mainLB,mainLB["leaderboards"][`${i}`]["fastestTimeSimple"],`${i}`,i);
         trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
     
-        if (category==="Slower-Glitch") { //prevent slow glitches from displaying
-          console.log(mainLB["leaderboards"][`${i}`]["name"] + "Slow glitch");
-          continue;
-        } 
+        if (category==="Slower-Glitch") {continue;} //prevent slow glitches from displaying
         if (largeCategories.includes(mainLB["leaderboards"][`${i}`]["name"])) {
           urlList.push(baseURL+this.mainLB["leaderboards"][`${i}`]["_links"]["item"]["href"]+'?limit=200');
           categories.push(category);
