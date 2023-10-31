@@ -12,30 +12,14 @@
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
     </head>
-    <body>
+    <body onload="createPageHeader('tops')">
         <button class="darkmode-toggle" onclick="toggleDarkMode()">
             <div>
                 <p id="darkmode-text">Dark Mode</p>
                 <img src="images/darkmode.svg"/>
             </div>
         </button>
-        <header>
-            <h1> Search for Top 10 Times or download Timesheet </h1>
-            <hr>
-            <nav>
-                <image src="images/funky.webp" alt="funk" height="100">
-                <div>
-                    <a href="index.html">Home</a>
-                    <a href="records.html">150cc CTGP Records</a>
-                    <a href="recordstwo.html">200cc CTGP Records</a>
-                    <a href="recordsnin.html">200cc Nintendo Records</a>
-                    <a href="tops.html" class="selected">Tops or Timesheet</a>
-                    <a href="playerlookup.html">Search for playerID</a>
-                </div>
-                <image src="images/wario.webp" alt="buns" height="100">
-            </nav>
-            <hr>
-        </header>
+        <header></header>
         <p> A table will display your top 10 times or entire timesheet. 
             Top ten times take about 3 minutes while timesheets can be closer to 20 minutes.
             Tops or timesheets can be downloaded as CSV files and CSV files can be uploaded to Excel or Google Sheets.

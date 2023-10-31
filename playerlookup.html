@@ -11,30 +11,14 @@
         <link href="styles.css" rel="stylesheet" type="text/css">
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
     </head>
-    <body>
+    <body onload="createPageHeader('playerlookup')">
         <button class="darkmode-toggle" onclick="toggleDarkMode()">
             <div>
                 <p id="darkmode-text">Dark Mode</p>
                 <img src="images/darkmode.svg"/>
             </div>
         </button>
-        <header>
-            <h1> Lookup your PlayerID </h1>
-            <hr>
-            <nav>
-                <image src="images/funky.webp" alt="funk" height="100">
-                <div>
-                    <a href="index.html">Home</a>
-                    <a href="records.html">150cc CTGP Records</a>
-                    <a href="recordstwo.html">200cc CTGP Records</a>
-                    <a href="recordsnin.html">200cc Nintendo Records</a>
-                    <a href="tops.html">Tops or Timesheet</a>
-                    <a href="playerlookup.html" class="selected">Search for playerID</a>
-                </div>
-                <image src="images/wario.webp" alt="buns" height="100">
-            </nav>
-            <hr>
-        </header>
+        <header></header>
         <p> Many former and all current record holders can get their playerID and chadsoft players page link by inputting your name. First letter must be capitalized. </p><b>
         <a href="players.json" target="_blank">Want to see the Raw Data?</a><br>
         <label for="playerName">Input Name Here:</label><br>

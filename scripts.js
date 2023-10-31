@@ -55,7 +55,8 @@ class NameQuantityNode {
 /*****************************************************************************/
 
 
-function loadLeaderboard(load) {
+function loadLeaderboard(load,currentPage) {
+  createPageHeader(currentPage)
   buildRecordWebpage()
   fetch(load).then(mainRes => {mainRes.json().then(mainLB =>{this.mainLB = mainLB;
 
@@ -78,6 +79,8 @@ function loadLeaderboard(load) {
 
   Promise.allSettled(fetches)
     .then((results) => {
+
+      fetch('./players.json').then(mainRes => {mainRes.json().then(playersPage => {this.playersPage = playersPage;
 
       let infoTitle = document.getElementById('main').getElementsByTagName('thead')[0];
       createTableHeader11(infoTitle.insertRow(),"Track Name","Category","Time","Player Name","Mii","Nation","Character","Vehicle","Controller","Date","Duration");
@@ -120,13 +123,25 @@ function loadLeaderboard(load) {
           continue;
         }
 
-        let player = getPlayerAndRegion(results[index]["value"]["ghosts"]["0"]["playerId"]),
-        currentVehicle=getVehicle(results[index]["value"]["ghosts"]["0"]["vehicleId"]),
+        let currentVehicle=getVehicle(results[index]["value"]["ghosts"]["0"]["vehicleId"]),
         currentCharacter=getCharacter(results[index]["value"]["ghosts"]["0"]["driverId"]),
         currentController=getController(results[index]["value"]["ghosts"]["0"]["controller"]),
         recordDate = results[index]["value"]["ghosts"]["0"]["dateSet"].slice(0,10); //UTC Time Date
         duration = getRecordDuration(recordDate);
         //getting strings from switch case statements
+
+        let player = ["Unknown","images/unknown.png"];
+        for (let i=0;i<playersPage.length;i++) {
+          if (playersPage[i].playerID.includes(results[index]["value"]["ghosts"]["0"]["playerId"])) {
+            if (playersPage[i].playerName[0].length === 1) {
+              player = [playersPage[i].playerName,playersPage[i].countryID];
+            }
+            else {
+              player = [playersPage[i].playerName[0],playersPage[i].countryID];
+            }
+            break;
+          }
+        }
 
         if (player[0]!="Unknown") {
           //prevent unknown players from being added to player tables and nation table, ghost stats are still added
@@ -216,6 +231,7 @@ function loadLeaderboard(load) {
       displayBar("years",yearSplit[0],yearSplit[1]); //bar charts
       displayBar("dates",getMonths(allDates),["Jan","Feb","Mar","Apr","May","June","July","Aug","Sep","Oct","Nov","Dec"]);
       createRedirect();
+    })})
   })
     .catch((err) => {
       console.log(err);
@@ -569,6 +585,46 @@ let tableInfo = {
   }
 }
 
+//json containing all necessary information to create html headers
+let headerInfo = {
+  "index": {
+    "title": "Welcome to Sardine's personal website",
+    "url": "index.html",
+    "urlText": "Home",
+    "index": 0
+  },
+  "records": {
+    "title": "All Current CTGP Records",
+    "url": "records.html",
+    "urlText": "150cc CTGP Records",
+    "index": 1
+  },
+  "recordstwo": {
+    "title": "All Current 200cc CTGP Records",
+    "url": "recordstwo.html",
+    "urlText": "200cc CTGP Records",
+    "index": 2
+  },
+  "recordsnin": {
+    "title": "All Current 200cc Nintendo Records",
+    "url": "recordsnin.html",
+    "urlText": "200cc Nintendo Records",
+    "index": 3
+  },
+  "tops": {
+    "title": "Search for Top 10 Times or download Timesheet",
+    "url": "tops.html",
+    "urlText": "Tops or Timesheet",
+    "index": 4
+  },
+  "playerlookup": {
+    "title": "Lookup your PlayerID",
+    "url": "playerlookup.html",
+    "urlText": "Search for playerID",
+    "index": 5
+  }
+}
+
 /** create html elements common across all leaderboards */
 function buildRecordWebpage() {
   document.body.appendChild(createTable("main"));
@@ -621,6 +677,48 @@ function buildRecordWebpage() {
   datesDiv.appendChild(createChart("dates"));
   chronoDiv.appendChild(datesDiv);
   document.body.appendChild(chronoDiv);
+}
+
+/** Create the header and highlight current page
+ * @param {String} currentPage name of html file*/
+function createPageHeader(currentPage) {
+  let header = document.getElementsByTagName("header");
+  let title = document.createElement("h1");
+  title.appendChild(document.createTextNode(headerInfo[`${currentPage}`]["title"]));
+  header[0].appendChild(title);
+  header[0].appendChild(document.createElement("hr"));
+  let navBar = document.createElement("nav");
+  let funkyImage = createImage("images/funky.webp");
+  funkyImage.height = 100;
+  navBar.appendChild(funkyImage);
+  navDiv = document.createElement("div");
+  redirectList = createHeaderHyperLinks(currentPage);
+  for (i=0;i<redirectList.length;i++) {
+    navDiv.appendChild(redirectList[i]);
+  }
+  navBar.appendChild(navDiv);
+  let warioImage = createImage("images/wario.webp");
+  warioImage.height = 100;
+  navBar.appendChild(warioImage);
+  header[0].appendChild(navBar);
+  header[0].appendChild(document.createElement("hr"));
+}
+
+/** highlight correct hyperlink and return array of all hyperlinks
+ * @param {String} currentPage 
+ * @returns Array */
+function createHeaderHyperLinks(currentPage) {
+  let hyperlinksList = [];
+  for (i=0;i<Object.keys(headerInfo).length;i++) {
+    let hyperlink = document.createElement("a");
+    hyperlink.href = headerInfo[`${currentPage}`]["url"];
+    hyperlink.appendChild(document.createTextNode(headerInfo[Object.keys(headerInfo)[i]]["urlText"]));
+    if (headerInfo[`${currentPage}`]["index"] === i) {
+      hyperlink.classList.add("selected");
+    }
+    hyperlinksList.push(hyperlink);
+  }
+  return hyperlinksList;
 }
 
 /** create html h2 
@@ -1340,164 +1438,4 @@ function getCharacter(x) {
       case 46: return "Daisy Biker Outfit";
       case 47: return "Rosalina Biker Outfit";
       default: return "Unknown";
-}}
-
-/** All current record holders and some former are present
- * Giant switch case to convert playerId to player name and country
- * Add another case for new player records or new playerID for existing player
- * Players often use hard to recognize mii names or incorrect regions when setting records
- * @param {Hash} x 
- * @returns array ["player","images/XX.png"] */
-function getPlayerAndRegion(x) {
-  switch (x) {
-    case '39B00EEE8050C7F5': return ["Doge","images/US.png"];
-    case '51152E6C037842FB': return ["Lawrence","images/US.png"];
-    case '0AAE4F3020A206E5': return ["Emil","images/US.png"];
-    case '1F401154EB4C8882': return ["Kasey","images/US.png"];
-    case 'D04D186FC8E58F13': return ["Abhilash","images/US.png"];
-    case '3794AED8D510C2DF': return ["Lυkε","images/GB.png"];
-    case '414A92F8CA12B4B7': return ["Ice","images/DK.png"];
-    case 'B87AC5F4E0D51ABD': return ["Jake","images/US.png"];
-    case 'D4609DB8549BBAF2': return ["Enzo","images/NL.png"];
-    case 'D31D0B090D52771B': return ["HiahowareU","images/GB.png"];
-    case 'AA060CB527F22D33': return ["Boshi","images/CA.png"];
-    case '39D91B1B8028227C': return ["Thunder","images/US.png"];
-    case 'E9F41458EFDBEDE6': return ["Soon","images/US.png"];
-    case '365CE091FB3C78BA': return ["Daseia","images/GR.png"];
-    case '6D50919C1845009D': return ["Justin","images/US.png"];
-    case '408FC6D7350F9236': return ["Carter","images/US.png"];
-    case '5F59DD451DEC7880': return ["Boodog","images/US.png"];
-    case '22475C923D0935C9': return ["Sardine","images/US.png"];
-    case 'CBF0CD7528C9C863': return ["Hintz","images/DE.png"];
-    case 'E7003EE0EFA24466': return ["Fernandez","images/US.png"];
-    case '92C14478FD19D33F': return ["Brody","images/US.png"];
-    case '25E7273F221A5B3E': return ["Nota","images/US.png"];
-    case '89DE32ADDA0E26FF': return ["Fatality","images/GB.png"];
-    case 'F3121BC1347B7C4F': return ["Bluesharp","images/GB.png"];
-    case '588538604751E9A3': return ["cτβ","images/US.png"];
-    case '7FF7D058E3292F98': return ["Ray","images/US.png"];
-    case 'B7D14921A52DDC10': return ["Steve","images/US.png"];
-    case '0D3E582048BC9B45': return ["Vesfef","images/FR.png"];
-    case '0F7423A3B5690C6A': return ["Watcha","images/DE.png"];
-    case 'BC2F105ACD1B9CFA': return ["Eve","images/US.png"];
-    case '3735C6FE62F34E96': return ["Weexy","images/NL.png"];
-    case '46EC81CA40C4B022': return ["Shun","images/JP.png"];
-    case '4FB442A70CE05EBC': return ["Clément","images/FR.png"];
-    case '858060403046B78E': return ["Eli","images/US.png"];
-    case 'FAB24E137904F1B7': return ["Kei","images/JP.png"];
-    case 'C8BC615C45A5452E': return ["Mikul","images/US.png"];
-    case '913B7D0CD8383910': return ["Noah","images/DK.png"];
-    case '7EB2C558D30BFE32': return ["Mγsτοgαη","images/US.png"];
-    case '8FDE8A2421594852': return ["Peyton","images/US.png"];
-    case '658EE53D8CE3B4C8': return ["Streedrop","images/CA.png"];
-    case '0B30901E3D1BF5FC': return ["Cosmo","images/CH.png"];
-    case 'BD2D1CCF8B642319': return ["Noam","images/IL.png"];
-    case '2D323E33C08CD426': return ["Clay","images/US.png"];
-    case '3010507BFDF643E7': return ["Arjun","images/US.png"];
-    case '029554DECB3F79EE': return ["Vincent","images/US.png"];
-    case '45120F275D291BFB': return ["Alex Croteau","images/US.png"];
-    case 'D35CD0F2F6576A47': return ["Police","images/US.png"];
-    case '95C6241CCE24A853': return ["Batcake","images/US.png"];
-    case '9E0D6D2FBC109C35': return ["Flurry","images/US.png"];
-    case 'BA141C33DD30F62B': return ["Jσikε","images/US.png"];
-    case '611AF70B6321DE01': return ["Zane","images/US.png"];
-    case '2E9390843D29256E': return ["Ivan","images/US.png"];
-    case '7F1981604F0044A2': return ["Swampy","images/US.png"];
-    case 'FCA8B6A3913B4B6E': return ["Dante","images/GB.png"];
-    case 'A108AA2B7BF8D07E': return ["JαK","images/US.png"];
-    case '773622CDCD37643D': return ["Ace","images/GB.png"];
-    case '2213E98F05362266': return ["Steve","images/GR.png"];
-    case '8D5E9B25C4754392': return ["Zilla","images/CA.png"];
-    case '8E788D1F04C44502': return ["Supreme","images/US.png"];
-    case 'B2AD3F4AE4DDE118': return ["Dxrk","images/DE.png"];
-    case '2B5181110E294547': return ["Kit","images/CA.png"];
-    case '61B745D2CE98F5E0': return ["David","images/GB.png"];
-    case '7ED82242442D6B1A': return ["64","images/US.png"];
-    case '07C2E13F252B1E34': return ["xWill","images/US.png"];
-    case 'F298827F8B5B6A39': return ["John G","images/US.png"];
-    case '079F6251C30B49C3': return ["Zuspii","images/US.png"];
-    case 'B2F19557B40DB4E0': return ["Nix","images/LU.png"];
-    case '40E78839761C0BCF': return ["Orca","images/GB.png"];
-    case 'BEFFC1EDEF914AE7': return ["Sgt","images/CA.png"];
-    case 'EC855BCF8FE000E2': return ["Booshi","images/FR.png"];
-    case '1F63CE364696FE18': return ["Fantasy","images/US.png"];
-    case 'A76198BDC4A3CF95': return ["Hades","images/US.png"];
-    case 'C4FB9639F94E8626': return ["Justin.","images/US.png"];
-    case '89D95A0CF12C9266': return ["Antonini","images/NL.png"];
-    case 'D86C27682F812A2C': return ["Abby","images/US.png"];
-    case 'D6A08AABAF569EC3': return ["Carson","images/US.png"];
-    case '0F91061953FAD1EB': return ["Ant","images/DZ.png"];
-    case '743B83BE3EC57EEB': return ["Kaden","images/GB.png"];
-    case '6C3E0B961B386F1E': return ["Marky","images/DK.png"];
-    case '013D172DE491D535': return ["Etterbeer","images/NL.png"];
-    case '1C6A832CF6B30CFF': return ["ElecTrick","images/IE.png"];
-    case 'B005F110C1FEC1E6': return ["César","images/ES.png"];
-    case 'CFE32EBDFA830703': return ["Jake","images/AU.png"];
-    case 'BFA9A17E2DDFAE6B': return ["8Click","images/NL.png"];
-    case '4BCE2DB0FBB930F5': return ["Consumify","images/GB.png"];
-    case '5E432F21F57C5488': return ["End","images/GB.png"];
-    case 'BD196411C5B1CBB1': return ["Lucker","images/DE.png"];
-    case '5D5CCC435A8F3E60': return ["Masako","images/DE.png"];
-    case '5856762B07EFCABB': return ["Type","images/JP.png"];
-    case '24DD2108D9B206AD': return ["Harris","images/US.png"];
-    case '3E8945E21441A100': return ["Shiv","images/FR.png"];
-    case 'B1BB4369EDE01041': return ["Kalium","images/CA.png"];
-    case 'C25230E4C4BF8F74': return ["Kilopoppy","images/CA.png"];
-    case 'DB7FF699E92272BB': return ["Jorge","images/US.png"];
-    case 'FE0455C11D1CD609': return ["Grantham","images/US.png"];
-    case 'EE91F250E359EC6E': return ["Naomi","images/US.png"];
-    case 'A2AC24D447CA7BCA': return ["Sal","images/IT.png"];
-    case 'B6126BA79DD1FD01': return ["Echo","images/US.png"];
-    case '95E6C190EE7D9C29': return ["AlexSX","images/US.png"];
-    case '350784CA5B2A19E2': return ["Lucas","images/CA.png"];
-    case '8E1D33C70B7677B5': return ["Thunda","images/CA.png"];
-    case '4054922A89F5551F': return ["Besart","images/AL.png"];
-    case '6017D742145FCFD2': return ["Radar","images/CA.png"];
-    case 'DDE38FD0B8E94933': return ["Cow Man","images/CA.png"];
-    case '3DB7AE8FA5999056': return ["Day E","images/US.png"];
-    case '86BEBF7D493903C9': return ["PowerTower","images/US.png"];
-    case 'C1F9D44DE9E4957B': return ["Falco","images/AU.png"];
-    case 'CC37DD1F13C5ED89': return ["KingAlex","images/CA.png"];
-    case '9B376538E2E5D4AF': return ["Bryce","images/US.png"];
-    case '4053C39B13F3BD24': return ["Carter C.","images/US.png"];
-    case '1EC3384B8D39B684': return ["MasterJCP","images/US.png"];
-    case '0243BB4D89833F9D': return ["Adc","images/US.png"];
-    case 'BA3BCE569962814B': return ["BossBoy28","images/US.png"];
-    case '708BBB3EE59D227F': return ["Core","images/GB.png"];
-    case '487447841A8CB10A': return ["SpitFire","images/US.png"];
-    case '532C35DD09E2A5C8': return ["Kevin G.","images/US.png"];
-    case '47F412EAC1AC604F': return ["Sam","images/GB.png"];
-    case 'FDC8971B80CC9823': return ["Abby","images/US.png"];
-    case '7C625EF944C73FEA': return ["Emiddle","images/PH.png"];
-    case '8B2AA1EB59B08E78': return ["Neptune","images/US.png"];
-    case 'C924039608AEDE35': return ["RyanUK","images/GB.png"];
-    case 'D1596B68ED3EE3CA': return ["Jcool","images/US.png"];
-    case '28104DE1ED018629': return ["Yahoo","images/JP.png"];
-    case 'E1D1D597940401C7': return ["Empex","images/US.png"];
-    case '4B7D706D8F20A001': return ["Patrick","images/US.png"];
-    case '0E40FC29E176583E': return ["Angel","images/CA.png"];
-    case 'E727E36DBB989ABE': return ["Snowman","images/US.png"];
-    case '1B2F946516B8A211': return ["Sean","images/GB.png"];
-    case '577232D12D27F89D': return ["Craze","images/US.png"];
-    case '65702F3A15278B49': return ["Zoren","images/US.png"];
-    case '2BCC7E4F1E811888': return ["Marvus","images/CA.png"];
-    case 'C99960EDB3B7890D': return ["Zi","images/FR.png"];
-    case 'CCE38AAD3BA3CEEF': return ["Soggy","images/US.png"];
-    case '580AD241ABC962FC': return ["FoxAmexion","images/US.png"];
-    case '987EE0EB54AB18BF': return ["Suciorap","images/GB.png"];
-    case '85419B3C48F157C7': return ["Flairy","images/GB.png"];
-    case 'F68757434F0AA9F0': return ["Mitch","images/AU.png"];
-    case '1875A48ED14ED211': case '54F2148B6C7083A3': return ["Coby","images/GB.png"]
-    case '79464E926AE9EECD': case '5E155CC9E1788D49': return ["Fraterz","images/US.png"];
-    case '73B48F99FD87462F': case '552A7CC576D11D56': return ["Yoshi","images/US.png"];
-    case '19B2986D5A69260B': case '890E6F8CCB86DA53': return ["Reece","images/US.png"];
-    case '855843F84CCF6FEB': case 'CA214F0DB57DB789': return ["Laty","images/US.png"];
-    case '360C3C594874BE50': case 'E73C5E6305FE5AAF': return ["Jogn","images/US.png"];
-    case '92F70E480F1407FD': case 'F60AF6D0EB38BB06': return ["Charlie","images/US.png"];
-    case 'D0E4D8B03A9A5849': case 'D0164155D1E00C2F': return ["Sawyer","images/US.png"];
-    case '6C37FC09DD67E33B': case '271EC09BB2E937BB': return ["Bickbork","images/US.png"];
-    case 'B9AB2EC621E671DB': case 'E659F91B99D78CA8': return ["Will","images/US.png"];
-    case '40B20BE4FD8CA88C': case 'AEEB0474F0DEABF8': case 'D8EEEF0F2872E83F': return ["καgυγα","images/JP.png"];
-    case '2240C482ADD7E0D3': case '2CC8A5568F7A106B': case '8A1F856DCE285FEF': return ["Scorpi","images/GB.png"];
-    default: return ["Unknown","images/unknown.png"];
 }}
