@@ -711,7 +711,7 @@ function createHeaderHyperLinks(currentPage) {
   let hyperlinksList = [];
   for (i=0;i<Object.keys(headerInfo).length;i++) {
     let hyperlink = document.createElement("a");
-    hyperlink.href = headerInfo[`${currentPage}`]["url"];
+    hyperlink.href = headerInfo[Object.keys(headerInfo)[i]]["url"];
     hyperlink.appendChild(document.createTextNode(headerInfo[Object.keys(headerInfo)[i]]["urlText"]));
     if (headerInfo[`${currentPage}`]["index"] === i) {
       hyperlink.classList.add("selected");
@@ -777,6 +777,16 @@ function createRedirect() {
   redirect.appendChild(document.createTextNode("Top of Page"));
   redirect.href = "#mainText";
   document.body.appendChild(redirect);
+}
+
+/** Take json of track lbs and index to download and create rkg file of record with proper naming scheme */
+function createRKGDownload(leaderboard,index) {
+  let RKGDownload = document.createElement('a'),
+  ghost = leaderboard[index]["value"]["fastestTime"];
+  RKGDownload.appendChild(document.createTextNode(ghost.slice(1,9)));
+  RKGDownload.setAttribute('href',leaderboard[index]["value"]["ghosts"]["0"]["href"]);
+  RKGDownload.setAttribute('download',ghost.slice(0,2)+"m"+ghost.slice(3,5)+"s"+ghost.slice(6,13)+" "+leaderboard[index]["value"]["ghosts"]["0"]["player"]+".rkg");
+  return RKGDownload;
 }
 
 /** takes a string to reference its objects in tableInfo.json
