@@ -190,6 +190,7 @@ function loadLeaderboard(load,currentPage) {
 
         cell1.innerHTML = results[index]["value"]["name"];
         cell2.innerHTML = categories[j];
+        //cell3.appendChild(createRKGDownload(results[index]["value"]["ghosts"],"0"));
         cell3.innerHTML = results[index]["value"]["fastestTimeSimple"].slice(1); //removes initial 0
         cell4.innerHTML = screenName;
         cell5.innerHTML = checkDefaultMii(results[index]["value"]["ghosts"]["0"]["player"]);
@@ -779,13 +780,15 @@ function createRedirect() {
   document.body.appendChild(redirect);
 }
 
-/** Take json of track lbs and index to download and create rkg file of record with proper naming scheme */
-function createRKGDownload(leaderboard,index) {
+/** Take json of track lbs and index to download and create rkg file of record or PB with proper naming scheme */
+function createRKGDownload(ghosts,ghostIndex) {
   let RKGDownload = document.createElement('a'),
-  ghost = leaderboard[index]["value"]["fastestTime"];
+  ghost = ghosts[ghostIndex].finishTime;
   RKGDownload.appendChild(document.createTextNode(ghost.slice(1,9)));
-  RKGDownload.setAttribute('href',leaderboard[index]["value"]["ghosts"]["0"]["href"]);
-  RKGDownload.setAttribute('download',ghost.slice(0,2)+"m"+ghost.slice(3,5)+"s"+ghost.slice(6,13)+" "+leaderboard[index]["value"]["ghosts"]["0"]["player"]+".rkg");
+  RKGDownload.href = baseURL + ghosts[ghostIndex].href;
+  //RKGDownload.href = "00m46s3036969 Kasey.rkg";
+  RKGDownload.target = "_blank";
+  RKGDownload.download = ghost.slice(0,2)+"m"+ghost.slice(3,5)+"s"+ghost.slice(6,13)+" "+ghosts[ghostIndex].player+".rkg";
   return RKGDownload;
 }
 
@@ -1039,6 +1042,8 @@ function calculateDifference(recordTime,nonRecordTime) {
   return "+"+minutes+":"+seconds+"."+milliseconds;
 }
 
+let chartColors = ['#3498DB', '#F39C12', '#8E44AD','#7F8C8D','#E74C3C','#27AE60','#34495E','#F7C003','#1d32a3','#6E6696','#7C5C3C','#CD0027'];
+
 /** creates pie chart
  * @param {string} tableIndex index for tableInfo
  * @param {Array} dataset NameQuantityNode Array */
@@ -1050,10 +1055,15 @@ function displayPie(tableIndex,dataset) {
   }
 
   let options = {
-    colors:['#3498DB', '#F39C12', '#8E44AD','#7F8C8D','#E74C3C','#27AE60','#34495E','#F7DC6F'],
+    chart: {type: 'pie',width: 450},
+    colors: chartColors,
+    labels: titles,
+    legend: {
+      labels: {
+        colors: chartColors,
+      }
+    },
     series: numbers,
-    chart: {width: 450,type: 'pie'},
-    labels: titles
   };
 
   let chart = new ApexCharts(document.querySelector(tableInfo[tableIndex]["chart"]), options);
@@ -1066,18 +1076,38 @@ function displayPie(tableIndex,dataset) {
  * @param {Array} x values for x-axis */
 function displayBar(tableIndex,dataset,x) {
   let options = {
+    chart: {
+      height: 350,
+      type: 'bar',
+      width: 500
+    },
+    fill: {opacity: 1},
     series: [{
       name: `Current Records set in this ${tableInfo[tableIndex]["tooltip"]}`,
       data: dataset
     }],
-    chart: {
-    type: 'bar',
-    height: 350,
-    width: 500
-  },
-  xaxis: {categories: x},
-  yaxis: {title: {text: 'Count'}},
-  fill: {opacity: 1}
+    xaxis: {
+      categories: x,
+      labels: {
+        style: {
+          colors: chartColors,
+        }
+      }
+    },
+    yaxis: {
+      labels: {
+        style: {
+          colors:['#cc4a40'],
+          fontSize: '14px',
+        }
+      },
+      title: {
+        text: 'Count',
+        style: {
+          color: '#cc4a40',
+        }
+      }
+    }
   };
 
   let chart = new ApexCharts(document.querySelector(tableInfo[tableIndex]["chart"]), options);

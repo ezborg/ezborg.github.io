@@ -154,7 +154,3 @@ html[data-theme="dark"] .darkmode-toggle img {
     grid-template-columns: auto auto auto;
     column-gap: 100px;
 }
-
-html[data-theme="dark"] .chart {
-    background-color: rgba(255, 255, 255, 0.85);
-}

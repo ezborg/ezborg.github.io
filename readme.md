@@ -1,12 +1,12 @@
 # CTGP Timesheet Downloader and Time Trial Record Leaderboard
 
-    The goal of this project was to automate a lot of work which was previously done manually. The problem with the CTGP website is that all tracks are seperated and there are no stats whatsoever. Many people including myself like looking at all tracks records in one location. There used to be a spreadsheet which was updated regularly which housed all the records and some stats in one location, but interest in updating the spreadsheet became very low. Thats why I created the website to automatically display up-to-date time trial records. Another problem with the CTGP website is that there is no names associated with time-trials, instead there is only a playerID. Also, some players may have more than 1 playerID for some reasons. So to give credit to the record holders, a database of playerIDs, player names, and their countries needed to be created.
+The goal of this project was to automate a lot of work which was previously done manually. The problem with the CTGP website is that all tracks are seperated and there are no stats whatsoever. Many people including myself like looking at all tracks records in one location. There used to be a spreadsheet which was updated regularly which housed all the records and some stats in one location, but interest in updating the spreadsheet became very low. Thats why I created the website to automatically display up-to-date time trial records. Another problem with the CTGP website is that there is no names associated with time-trials, instead there is only a playerID. Also, some players may have more than 1 playerID for some reasons. So to give credit to the record holders, a database of playerIDs, player names, and their countries needed to be created.
 
 # Features
 
-    Now there are leaderboards for all the Custom Tracks and Custom Gamemodes. Some stats that are calculated are Top 10 longest standing records, Pie charts which have all the used characters and vehicles, as well as lists showing how many records each person has at a given time or how many records a nation has.
+Now there are leaderboards for all the Custom Tracks and Custom Gamemodes. Some stats that are calculated are Top 10 longest standing records, Pie charts which have all the used characters and vehicles, as well as lists showing how many records each person has at a given time or how many records a nation has.
 
-    Not only records are shown on the website. In the tops page, anyone canuse their playerId to search for any top 10 times they have or search for all of their personal bests on every track. This data can then be downloaded as a CSV file and imported into any spreadsheet software or used for more in depth statistical analysis with stats languages like R.
+Not only records are shown on the website. In the tops page, anyone canuse their playerId to search for any top 10 times they have or search for all of their personal bests on every track. This data can then be downloaded as a CSV file and imported into any spreadsheet software or used for more in depth statistical analysis with stats languages like R.
 
 # CTGP API Documentation
 
