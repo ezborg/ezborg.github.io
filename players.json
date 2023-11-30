@@ -10,6 +10,7 @@
 {"playerID": ["92F70E480F1407FD","F60AF6D0EB38BB06"], "playerName": "Charlie", "countryID": "images/US.png"},
 {"playerID": ["D0E4D8B03A9A5849","D0164155D1E00C2F"], "playerName": "Sawyer", "countryID": "images/US.png"},
 {"playerID": ["6C37FC09DD67E33B","271EC09BB2E937BB"], "playerName": "Bickbork", "countryID": "images/US.png"},
+{"playerID": ["3DB7AE8FA5999056","4248F1A12AB9C849"], "playerName": "Day E","countryID": "images/US.png"},
 {"playerID": "39B00EEE8050C7F5", "playerName": ["Doge","Jove"],"countryID": "images/US.png"},
 {"playerID": "A2AC24D447CA7BCA", "playerName": "Sal","countryID": "images/IT.png"},
 {"playerID": "51152E6C037842FB", "playerName": ["Lawrence","RevengeStyle6"],"countryID": "images/US.png"},
@@ -114,7 +115,6 @@
 {"playerID": "4054922A89F5551F", "playerName": "Besart","countryID": "images/AL.png"},
 {"playerID": "6017D742145FCFD2", "playerName": "Radar","countryID": "images/CA.png"},
 {"playerID": "DDE38FD0B8E94933", "playerName": "Cow Man","countryID": "images/CA.png"},
-{"playerID": "3DB7AE8FA5999056", "playerName": "Day E","countryID": "images/US.png"},
 {"playerID": "86BEBF7D493903C9", "playerName": "PowerTower","countryID": "images/US.png"},
 {"playerID": "C1F9D44DE9E4957B", "playerName": "Falco","countryID": "images/AU.png"},
 {"playerID": "CC37DD1F13C5ED89", "playerName": "KingAlex","countryID": "images/CA.png"},
@@ -147,6 +147,10 @@
 {"playerID": "22475C923D0935C9", "playerName": "Sardine", "countryID": "images/US.png"},
 {"playerID": "85419B3C48F157C7", "playerName": "Flairy", "countryID": "images/GB.png"},
 {"playerID": "F68757434F0AA9F0", "playerName": "Mitch", "countryID": "images/AU.png"},
+{"playerID": "BAF1BD62FC4616AE", "playerName": ["Pepe","8610"], "countryID": "images/US.png"},
+{"playerID": "6D9891B9B4C0C1ED", "playerName": "MHS", "countryID": "images/UK.png"},
+{"playerID": "B4D87F5D14564E17", "playerName": "CRYLIX", "countryID": "images/JP.png"},
+{"playerID": "EDE15287CC1F4D83", "playerName": "James", "countryID": "images/US.png"},
 {"playerID": ["40B20BE4FD8CA88C","AEEB0474F0DEABF8","D8EEEF0F2872E83F"], "playerName": ["καgυγα","Kaguya"], "countryID": "images/JP.png"},
 {"playerID": ["2240C482ADD7E0D3","2CC8A5568F7A106B","8A1F856DCE285FEF"], "playerName": "Scorpi", "countryID": "images/GB.png"}
 ]
