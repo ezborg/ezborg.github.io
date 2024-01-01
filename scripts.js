@@ -4,7 +4,7 @@ slowCategories = ["N64 Bowser's Castle","Mushroom Gorge","GCN Mario Circuit","To
 //arrays for determining categories for edge cases
 largeCategories = ["GCN Baby Park","Jungle Jamble","Undiscovered Offlimit","Wetland Woods","Sunset Forest","White Garden","Mushroom Island",
                     "Colour Circuit","GCN Mushroom Bridge","Fishdom Island","Kinoko Cave","Summer Starville","Spectral Station","Obstagoon's Palace",
-                  "Camp Kartigan","Castle of Darkness","Haunted Gardens","Icepeak Mountain","Castle of Time","N.I.S.W.O.E. Desert"];
+                  "Camp Kartigan","Castle of Darkness","Haunted Gardens","Castle of Time","N.I.S.W.O.E. Desert"];
 //array to fetch more ghosts for top 10 LBs, category is large if top 10 ghosts are not within first 100 entries
 //must be manually inputed, ended last time at GCN RR, list based on total ghosts
 
@@ -65,7 +65,7 @@ function loadLeaderboard(load,currentPage) {
   } //FUTURE if new params found: url.searchParams.set("limit",1) */
 
   for (let i=0;i<mainLB["leaderboards"].length;i++) {
-    category = determineCategory(mainLB,mainLB["leaderboards"][`${i}`]["fastestTimeSimple"],`${i}`,i);
+    category = determineCategory(mainLB,`${i}`,i);
     trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
 
     if (category==="Slower-Glitch") { //prevent slow glitches from displaying
@@ -343,7 +343,7 @@ function topsByPID() {
 
     if (timesheet.checked === true) { //every ghost
       for (let i=0;i<mainLB["leaderboards"].length;i++) {
-        category = determineCategory(mainLB,mainLB["leaderboards"][`${i}`]["fastestTimeSimple"],`${i}`,i);
+        category = determineCategory(mainLB,`${i}`,i);
         trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
     
         if (category==="Slower-Glitch") {continue;} //prevent slow glitches from displaying
@@ -353,7 +353,7 @@ function topsByPID() {
     }
     else { //top 10 search, try to limit ghosts fetched to speed up process
       for (let i=0;i<mainLB["leaderboards"].length;i++) {
-        category = determineCategory(mainLB,mainLB["leaderboards"][`${i}`]["fastestTimeSimple"],`${i}`,i);
+        category = determineCategory(mainLB,`${i}`,i);
         trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
     
         if (category==="Slower-Glitch") {continue;} //prevent slow glitches from displaying
@@ -979,14 +979,11 @@ function getMonthBundleByYear(dataset,year) {
       for (let m=0;m<12;m++) {
         if (parseInt(dataset[i].slice(5,7))===m+1) {
           months[m]++;
-        }
-      }
-    }
-  }
+  }}}}
   return {name: year,data: months};
 }
 
-/** finds highest ranking ghost for a LB for a playerID
+/** finds highest ranking ghost in a leaderboard for a playerID
  * @param {Array} dataset 
  * @param {string} id 
  * @param {Boolean} wholeLB //timesheet.checked
@@ -1091,8 +1088,7 @@ function displayBar(tableIndex,dataset,x) {
       labels: {
         style: {
           colors: chartColors,
-        }
-      }
+        }}
     },
     yaxis: {
       labels: {
@@ -1105,8 +1101,7 @@ function displayBar(tableIndex,dataset,x) {
         text: 'Count',
         style: {
           color: '#cc4a40',
-        }
-      }
+        }}
     }
   };
 
@@ -1214,9 +1209,9 @@ function displayTopTen(dataset) {
   }
 }
 
-/** Uses simple ghost times and totals them
+/** Sums simple ghost times
  * @param {Array} totalTimes 
- * @returns String, total ghost times */
+ * @returns String, total time of all ghosts*/
 function addGhostTimes(totalTimes) {
   let hours = 0, minutes = 0, seconds = 0, milliseconds = 0;
   for (let q=0;q<totalTimes.length;q++) {
@@ -1236,26 +1231,21 @@ function addGhostTimes(totalTimes) {
       hours+=1;
     }
   }
-  if (minutes<10) {
-    minutes = `0${minutes}`;
-  }
-  if (seconds<10) {
-    seconds = `0${seconds}`;
-  }
-  if (milliseconds<10) {
-    milliseconds = `00${milliseconds}`;
-  }
-  else if (milliseconds<100) {
-    milliseconds = `0${milliseconds}`;
-  }
+
+  if (minutes<10) {minutes = `0${minutes}`;}
+  if (seconds<10) {seconds = `0${seconds}`;}
+
+  if (milliseconds<10) {milliseconds = `00${milliseconds}`;}
+  else if (milliseconds<100) {milliseconds = `0${milliseconds}`;}
+
   return `${hours}:${minutes}:${seconds}.${milliseconds}`;
 }
 
-/** takes two strings representing record times XX:XX.XXX
+/** compare two strings representing times XX:XX.XXX
  * @param {string} current_glitch track time being tested
  * @param {string} not_glitch track time from no-glitch category
- * @returns boolean, true if slowglitch, false if fastglitch */
-function isSlowGlitch(current_glitch,not_glitch) { //compares two values of type 02:22.222
+ * @returns boolean, true if slow glitch, false if faster glitch */
+function isSlowGlitch(current_glitch,not_glitch) {
   //Minutes
   if (parseInt(current_glitch.slice(1,2))<parseInt(not_glitch.slice(1,2))) {
     return false;
@@ -1277,52 +1267,50 @@ function isSlowGlitch(current_glitch,not_glitch) { //compares two values of type
   return false;
 }
 
-/** Checks leaderboard name against surrounding names to determine a tracks category
- * options are Normal,No-Glitch,Glitch,No-Shortcut,Shortcut,Slower-Glitch
- * @param {json} mainLB 
- * @param {string} recordTime used to pass to slowGlitch function
- * @param {string} index object literal of j
- * @param {number} j index=j
- * @returns a string of the track's category */
-function determineCategory(mainLB,recordTime,index,j) {
+/** Checks leaderboard name against surrounding names to determine a tracks category;
+ * @param {json} mainLB
+ * @param {number} ghostIndex
+ * @param {string} ghostIndexStr object literal of ghostIndex
+ * @returns Normal, No-Glitch, Glitch, No-Shortcut, Shortcut, Slower-Glitch */
+function determineCategory(mainLB,ghostIndex,ghostIndexStr) {
   let category;
-  if (j>0 && mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-1}`]["name"]) {
+  if (ghostIndex>0 && mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex-1}`]["name"]) {
     
     category = 'Glitch';
-    if (isSlowGlitch(recordTime,mainLB["leaderboards"][`${j-1}`]["fastestTimeSimple"])) {category = "Slower-Glitch";}
+    if (isSlowGlitch(mainLB["leaderboards"][`${ghostIndex}`]["fastestTimeSimple"],mainLB["leaderboards"][`${ghostIndex-1}`]["fastestTimeSimple"])) {category = "Slower-Glitch";}
 
     try {
-      if (noShortcutCategoryIDs.includes(mainLB["leaderboards"][index]["categoryId"])) {category = "No-Shortcut";}
+      if (noShortcutCategoryIDs.includes(mainLB["leaderboards"][ghostIndexStr]["categoryId"])) {category = "No-Shortcut";}
     }
     catch(err) {console.log("Error handled: categoryId not present");}
 
-    if (slowCategories.includes(mainLB["leaderboards"][index]["name"],2)) {category = "Normal";}
+    if (slowCategories.includes(mainLB["leaderboards"][ghostIndexStr]["name"],2)) {category = "Normal";}
 
-    if (j>1 && mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-2}`]["name"] && 
-      slowCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Normal";}
+    if (ghostIndex>1 && mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex-2}`]["name"] && 
+      slowCategories.includes(mainLB["leaderboards"][ghostIndexStr]["name"])) {category = "Normal";}
 
-    if (j>1 && mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j-2}`]["name"] && 
-      mainLB["leaderboards"][index]["name"]==="Coconut Mall") {category = "Slower-Glitch";}
+    if (ghostIndex>1 && mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex-2}`]["name"] && 
+      mainLB["leaderboards"][ghostIndexStr]["name"]==="Coconut Mall") {category = "Slower-Glitch";}
   } 
 
-  else if (j<mainLB["leaderboards"].length-1 && mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j+1}`]["name"]) {
+  else if (ghostIndex<mainLB["leaderboards"].length-1 && mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex+1}`]["name"]) {
 
     category = 'No-Glitch';
-    if (isSlowGlitch(mainLB["leaderboards"][`${j+1}`]["fastestTimeSimple"],recordTime)) {category = "Normal";}
+    if (isSlowGlitch(mainLB["leaderboards"][`${ghostIndex+1}`]["fastestTimeSimple"],mainLB["leaderboards"][`${ghostIndex}`]["fastestTimeSimple"])) {category = "Normal";}
 
-    if (j<mainLB["leaderboards"].length-2) {
-      if (mainLB["leaderboards"][index]["name"]===mainLB["leaderboards"][`${j+2}`]["name"] || 
-        shortcutCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Shortcut";}
+    if (ghostIndex<mainLB["leaderboards"].length-2) {
+      if (mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex+2}`]["name"] || 
+        shortcutCategories.includes(mainLB["leaderboards"][ghostIndexStr]["name"])) {category = "Shortcut";}
     }
 
-    try {//used for six king lab and would work for 150cc Nintendo's
-      if (mainLB["leaderboards"][index]["categoryId"]===16) {category = "Shortcut";}
+    try {//used for original Mr.Bean tracks and would work for 150cc Nintendo's
+      if (mainLB["leaderboards"][ghostIndexStr]["categoryId"]===16) {category = "Shortcut";}
     }
     catch(err) {console.log("Error handled: categoryId not present");}
 
-    if (slowCategories.includes(mainLB["leaderboards"][index]["name"])) {category = "Slower-Glitch";}
+    if (slowCategories.includes(mainLB["leaderboards"][ghostIndexStr]["name"])) {category = "Slower-Glitch";}
 
-    if (mainLB["leaderboards"][index]["name"]==="Six King Labyrinth" && mainLB["leaderboards"][index]["200cc"]) {category = "Slower-Glitch";}
+    if (mainLB["leaderboards"][ghostIndexStr]["name"]==="Six King Labyrinth" && mainLB["leaderboards"][ghostIndexStr]["200cc"]) {category = "Slower-Glitch";}
   }
   else {category = 'Normal';}
   return category;
@@ -1364,10 +1352,7 @@ addEventListener("DOMContentLoaded", () => {
 /*                          Switch Case Statments                            */
 /*****************************************************************************/
 
-//default value is set to unknown and will prevent unknown players from being added to player stats tables
-//default value is unnecessary for all other switch/cases
-
-/** convert controller (int) to actual controller (string)
+/** converts controller (int) to a controller name
  * @param {Number} x 
  * @returns controller string */
 function getController(x) {
@@ -1379,7 +1364,7 @@ function getController(x) {
       default: return "Unknown";
 }}
 
-/** converts vehicleId to actual vehicle, karts 0-17, bikes 18-35
+/** converts vehicleId (int) to a vehicle name; karts 0-17; bikes 18-35
  * @param {Number} x 
  * @returns vehicle string */
 function getVehicle(x) {
@@ -1423,8 +1408,8 @@ function getVehicle(x) {
       default: return "Unknown";
 }}
 
-/** Takes an int (driverId) and converts to character
- * the first half is seemingly random and I don't think 42-47 are valid
+/** converts driverId (int) to a character name;
+ * order is random; numbers [28-29,34-35,40-47] are unobtainable
  * @param {Number} x 
  * @returns character string */
 function getCharacter(x) {
