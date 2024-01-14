@@ -65,7 +65,7 @@ function loadLeaderboard(load,currentPage) {
   } //FUTURE if new params found: url.searchParams.set("limit",1) */
 
   for (let i=0;i<mainLB["leaderboards"].length;i++) {
-    category = determineCategory(mainLB,`${i}`,i);
+    category = determineCategory(mainLB,i,`${i}`);
     trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
 
     if (category==="Slower-Glitch") { //prevent slow glitches from displaying
@@ -343,7 +343,7 @@ function topsByPID() {
 
     if (timesheet.checked === true) { //every ghost
       for (let i=0;i<mainLB["leaderboards"].length;i++) {
-        category = determineCategory(mainLB,`${i}`,i);
+        category = determineCategory(mainLB,i,`${i}`);
         trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
     
         if (category==="Slower-Glitch") {continue;} //prevent slow glitches from displaying
@@ -353,7 +353,7 @@ function topsByPID() {
     }
     else { //top 10 search, try to limit ghosts fetched to speed up process
       for (let i=0;i<mainLB["leaderboards"].length;i++) {
-        category = determineCategory(mainLB,`${i}`,i);
+        category = determineCategory(mainLB,i,`${i}`);
         trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
     
         if (category==="Slower-Glitch") {continue;} //prevent slow glitches from displaying
