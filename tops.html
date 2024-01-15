@@ -6,8 +6,8 @@
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <meta name="keywords" content="Sardine,MKW,tops,custom,Stats">
         <meta name="author" content="Sardine">
-        <meta name="description" content="Personal Top10s">
-        <title>Check your CTGP Top 10 times</title>
+        <meta name="description" content="CSV Download Timesheets">
+        <title>Look up times based on PlayerID</title>
         <link href="styles.css" rel="stylesheet" type="text/css">
         <link rel="icon" type="image/x-icon" href="images/favicon.ico">
         <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
@@ -20,14 +20,10 @@
             </div>
         </button>
         <header></header>
-        <p> A table will display your top 10 times or entire timesheet. 
-            Top ten times take about 3 minutes while timesheets can be closer to 20 minutes.
+        <p> A table will display your top 10 times or entire timesheet. Top ten tables take about 3 minutes to load while timesheets can be closer to 20 minutes.
             Tops or timesheets can be downloaded as CSV files and CSV files can be uploaded to Excel or Google Sheets.
-            Only one leaderboard can be chosen at a time. 
-            Only one Player ID may be checked at a time. 
-            Player ID is not case sensitive and will be 16 characters consisting of numbers and letters.
-            Slow categories are not included. </p>
-        <b>  
+            Only one leaderboard can be chosen at a time. Only one Player ID may be checked at a time. 
+            Player ID is not case sensitive and will be 16 characters consisting of numbers and letters. Slow categories are not included. </p><b>  
         <label for="playerID">Copy and paste your player ID here:</label><br>
         <input type="text" id="playerID" name="playerID"><br>
         <input type="button" onclick="topsByPID()" value="Search"><br></b>
@@ -36,8 +32,8 @@
             <input type="checkbox" id="Timesheet?" name="Timesheet?" value="Timesheet?">
         </div>
 
-        <p> Don't know player ID? <a href="https://www.chadsoft.co.uk/time-trials/players.html"> Try the lookup feature </a> 
-        or find it on <a href="https://www.chadsoft.co.uk/time-trials/players.html"> Chadsoft </a>.
+        <p> Don't know player ID? <a href="playerlookup.html" target="_blank"> Try the lookup feature</a> 
+        or find it on <a href="https://www.chadsoft.co.uk/time-trials/players.html"> Chadsoft</a>.
         </p>
         <image src="images/playerID.png" alt="playerPage" height="200"><br>
         <p> Choose your leaderboard</p>
@@ -61,7 +57,6 @@
                 </label>
             </div>
         </div>
-
         <script src="scripts.js"></script>
     </body>
 </html>

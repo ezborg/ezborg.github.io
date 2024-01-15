@@ -415,14 +415,14 @@ function topsByPID() {
             cell11.innerHTML = getRecordDuration(results[index]["value"]["ghosts"][ghostLoc]["dateSet"]);
 
             allPersonalRecords.push(results[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"]);
-            csvList.push([results[index]["value"]["name"],categories[j],rNum.getQuantity(),
+            csvList.push([results[index]["value"]["name"].replace(",",""),categories[j],rNum.getQuantity(),
               results[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"].slice(1),results[index]["value"]["ghosts"][ghostLoc]["player"],
               getCharacter(results[index]["value"]["ghosts"][ghostLoc]["driverId"]),getVehicle(results[index]["value"]["ghosts"][ghostLoc]["vehicleId"]),
               results[index]["value"]["ghosts"][ghostLoc]["dateSet"].slice(0,10),getRecordDuration(results[index]["value"]["ghosts"][ghostLoc]["dateSet"]),
               getController(results[index]["value"]["ghosts"][ghostLoc]["controller"]),results[index]["value"]["ghosts"][ghostLoc]["wasWr"]]);
           }
           else if (timesheet.checked) {
-            csvList.push([results[index]["value"]["name"],categories[j]]);
+            csvList.push([results[index]["value"]["name"].replace(",",""),categories[j]]);
           }
         }
 
@@ -441,7 +441,7 @@ function topsByPID() {
                   let failedTrack = trackIds.indexOf(retryfetches[index].slice(41,81)); //find track id from url and use it to find index of correlated track in master json
                   console.log(mainLB["leaderboards"][`${failedTrack}`]["name"]+" failed to fetch twice. Adding to failed list.");
                   failedFetches.push(mainLB["leaderboards"][`${failedTrack}`]["name"]); //master json always exists or it will have failed already
-                  csvList.unshift([mainLB["leaderboards"][`${failedTrack}`]["name"],"Normal"]);
+                  csvList.unshift([mainLB["leaderboards"][`${failedTrack}`]["name"].replace(",",""),"Normal"]);
                   continue;
                 }
       
@@ -473,14 +473,14 @@ function topsByPID() {
                   cell11.innerHTML = getRecordDuration(results2[index]["value"]["ghosts"][ghostLoc]["dateSet"]);
       
                   allPersonalRecords.push(results2[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"]);
-                  csvList.unshift([results2[index]["value"]["name"],categories2[j],rNum.getQuantity(),
+                  csvList.unshift([results2[index]["value"]["name"].replace(",",""),categories2[j],rNum.getQuantity(),
                     results2[index]["value"]["ghosts"][ghostLoc]["finishTimeSimple"].slice(1), results2[index]["value"]["ghosts"][ghostLoc]["player"],
                     getCharacter(results2[index]["value"]["ghosts"][ghostLoc]["driverId"]),getVehicle(results2[index]["value"]["ghosts"][ghostLoc]["vehicleId"]),
                     results2[index]["value"]["ghosts"][ghostLoc]["dateSet"].slice(0,10),getRecordDuration(results2[index]["value"]["ghosts"][ghostLoc]["dateSet"]),
                     getController(results2[index]["value"]["ghosts"][ghostLoc]["controller"]),results2[index]["value"]["ghosts"][ghostLoc]["wasWr"]]);
                 }
                 else if (timesheet.checked) {
-                  csvList.unshift([results[index]["value"]["name"],categories2[j]]);
+                  csvList.unshift([results[index]["value"]["name"].replace(",",""),categories2[j]]);
                 }
               }
               csvList.sort(function(a, b) { //simple sort was not working
@@ -489,7 +489,6 @@ function topsByPID() {
                 if(nameA > nameB) { return 1; }
                 return 0;
               });
-              csvList.unshift(["Track Name","Category","Rank","Time","Mii","Character","Vehicle","Date","Duration","Controller","Was WR?"]); //create csv headers after sorting
               createCSV(allPersonalRecords,csvList);
               if (failedFetches.length>0) {
                 let failedTracks = "";
@@ -613,7 +612,7 @@ let headerInfo = {
     "index": 3
   },
   "tops": {
-    "title": "Search for Top 10 Times or download Timesheet",
+    "title": "Download Top 10 Times or an Entire Timesheet",
     "url": "tops.html",
     "urlText": "Tops or Timesheet",
     "index": 4
@@ -823,6 +822,7 @@ function createTableChartDiv(index) {
  * @param {Array} allPersonalRecords 
  * @param {Array} csvList */
 function createCSV(allPersonalRecords,csvList) {
+  csvList.unshift(["Track Name","Category","Rank","Time","Mii","Character","Vehicle","Date","Duration","Controller","Was WR?"]);
   csvList.push([`Total Ghosts: ${allPersonalRecords.length}`," ",`Total Personal Time: ${addGhostTimes(allPersonalRecords)}`]);
   var csv = 'data:text/csv;charset=utf-8,' + csvList.map(e => e.join(",")).join("\n");
   let data = encodeURI(csv);
