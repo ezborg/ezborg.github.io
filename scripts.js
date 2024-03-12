@@ -1,12 +1,13 @@
-const baseURL = "https://tt.chadsoft.co.uk", noShortcutCategoryIDs = [2,6], //must use https://
-shortcutCategories = ["GCN DK Mountain","Incendia Castle"],
-slowCategories = ["N64 Bowser's Castle","Mushroom Gorge","GCN Mario Circuit","Toad's Factory","DS Desert Hills"],
-//arrays for determining categories for edge cases
+/*****************************************************************************/
+/*                             Declarations                                  */
+/*****************************************************************************/
+
+const baseURL = "https://tt.chadsoft.co.uk",  //must use https://
 largeCategories = ["GCN Baby Park","Jungle Jamble","Undiscovered Offlimit","Wetland Woods","Sunset Forest","White Garden","Mushroom Island",
-                    "Colour Circuit","GCN Mushroom Bridge","Fishdom Island","Kinoko Cave","Summer Starville","Spectral Station","Obstagoon's Palace",
-                  "Camp Kartigan","Castle of Darkness","Haunted Gardens","Castle of Time","N.I.S.W.O.E. Desert"];
+                  "Colour Circuit","GCN Mushroom Bridge","Fishdom Island","Kinoko Cave","Summer Starville","Spectral Station","Obstagoon's Palace",
+                  "Camp Kartigan","Castle of Darkness","Haunted Gardens","Castle of Time"];
 //array to fetch more ghosts for top 10 LBs, category is large if top 10 ghosts are not within first 100 entries
-//must be manually inputed, ended last time at GCN RR, list based on total ghosts
+//must be manually inputed, it is logged in console during execution for easy knowledge
 
 let urlList = [], categories = [], trackIds = []; //trackIds and categories arrays are used to find data in first mainLB fetch because not all leaderboards are fetched afterwards
 const leaderboardsURLS = {
@@ -68,7 +69,7 @@ function loadLeaderboard(load,currentPage) {
     category = determineCategory(mainLB,i,`${i}`);
     trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
 
-    if (category==="Slower-Glitch") { //prevent slow glitches from displaying
+    if (category==="Slower-Glitch") { //prevent slow glitches and slow shortcuts from displaying
       //console.log(mainLB["leaderboards"][`${i}`]["name"] + "Slow glitch");
       continue;
     }
@@ -144,7 +145,7 @@ function loadLeaderboard(load,currentPage) {
         }
 
         if (player[0]!="Unknown") {
-          //prevent unknown players from being added to player tables and nation table, ghost stats are still added
+          //prevent unknown players from being added to player and nation table, ghost stats are still added
           //will still be displayed for overall record table
           if (toBeAdded = addToArray(player[0],playerTally)) {
             playerTally.push(new NameQuantityNode(player[0],1,player[1]))
@@ -152,7 +153,7 @@ function loadLeaderboard(load,currentPage) {
           if (toBeAdded = addToArray(player[1].slice(7,9),countryTally)) {
             countryTally.push(new NameQuantityNode(player[1].slice(7,9),1,player[1]))
           }
-          if (categories[j]==="Glitch") {
+          if (categories[j]==="Glitch" || categories[j]==="Shortcut") {
             if (toBeAdded = addToArray(player[0],glitchTally)) {glitchTally.push(new NameQuantityNode(player[0],1,player[1]))}
           }
           else {
@@ -538,12 +539,12 @@ let tableInfo = {
   "glitch":{
     "id": "glitchList",
     "class": "skinny-table",
-    "header": "Player Totals: Glitch"
+    "header": "Player Totals: Glitch/Shortcut"
   },
   "noGlitch":{
     "id": "noGlitchList",
     "class": "skinny-table",
-    "header": "Player Total: No-glitch"
+    "header": "Player Total: Normal/No-shortcut"
   },
   "vehicle":{
     "id": "vehicleList",
@@ -1267,53 +1268,79 @@ function isSlowGlitch(current_glitch,not_glitch) {
   return false;
 }
 
-/** Checks leaderboard name against surrounding names to determine a tracks category;
+/** Checks glitch and shortcut times against surrounding json entries to see if they are fast enough
+ * @param {string} category 
+ * @param {json} mainLB 
+ * @param {number} ghostIndex 
+ * @param {number} offset either -1 for glitchs or 2 for shortcuts
+ * @returns category string */
+function localTrackNameTimeComparator(category,mainLB,ghostIndex,offset) {
+  if (ghostIndex<mainLB["leaderboards"].length-1) {
+    if (mainLB["leaderboards"][`${ghostIndex}`]["name"] === mainLB["leaderboards"][`${ghostIndex+1}`]["name"] 
+                    && noShortcutCategoryIDs.includes(mainLB["leaderboards"][`${ghostIndex+1}`]["categoryId"])) {
+      if (isSlowGlitch(mainLB["leaderboards"][`${ghostIndex}`]["fastestTimeSimple"],mainLB["leaderboards"][`${ghostIndex+1}`]["fastestTimeSimple"])) {return "Slower-Glitch";}
+      else {return category;}
+
+    }
+  }
+  if (ghostIndex<mainLB["leaderboards"].length-offset && mainLB["leaderboards"][`${ghostIndex}`]["name"] === mainLB["leaderboards"][`${ghostIndex+offset}`]["name"]) {
+    if (isSlowGlitch(mainLB["leaderboards"][`${ghostIndex}`]["fastestTimeSimple"],mainLB["leaderboards"][`${ghostIndex+offset}`]["fastestTimeSimple"])) {return "Slower-Glitch";}
+    else {return category;}
+  }
+  return category;
+}
+
+const noShortcutCategoryIDs = [0,2,6];
+const glitchCategoryIDs = [1,5];
+const shortcutCategoryIDs = [4,16]; //unused current as 4 is unrealible
+//0,1,2,16 are 150cc
+//4,5,6 are 200cc
+
+/** Checks categoryIds to determine category and handle all API inconsistencies
  * @param {json} mainLB
  * @param {number} ghostIndex
  * @param {string} ghostIndexStr object literal of ghostIndex
- * @returns Normal, No-Glitch, Glitch, No-Shortcut, Shortcut, Slower-Glitch */
+ * @returns Normal, Glitch, No-Shortcut, Shortcut, Slower-Glitch */
 function determineCategory(mainLB,ghostIndex,ghostIndexStr) {
-  let category;
-  if (ghostIndex>0 && mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex-1}`]["name"]) {
+  if (mainLB["leaderboards"][ghostIndexStr].hasOwnProperty("categoryId")) {
     
-    category = 'Glitch';
-    if (isSlowGlitch(mainLB["leaderboards"][`${ghostIndex}`]["fastestTimeSimple"],mainLB["leaderboards"][`${ghostIndex-1}`]["fastestTimeSimple"])) {category = "Slower-Glitch";}
+    if (noShortcutCategoryIDs.includes(mainLB["leaderboards"][ghostIndexStr]["categoryId"])) {
+      if (mainLB["leaderboards"][ghostIndexStr]["name"]==="Coconut Mall") {return "Slower-Glitch";}
+      return "No-Shortcut";
+    } //No time check is neccessary on No-Shortcut categories
 
-    try {
-      if (noShortcutCategoryIDs.includes(mainLB["leaderboards"][ghostIndexStr]["categoryId"])) {category = "No-Shortcut";}
-    }
-    catch(err) {console.log("Error handled: categoryId not present");}
-
-    if (slowCategories.includes(mainLB["leaderboards"][ghostIndexStr]["name"],2)) {category = "Normal";}
-
-    if (ghostIndex>1 && mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex-2}`]["name"] && 
-      slowCategories.includes(mainLB["leaderboards"][ghostIndexStr]["name"])) {category = "Normal";}
-
-    if (ghostIndex>1 && mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex-2}`]["name"] && 
-      mainLB["leaderboards"][ghostIndexStr]["name"]==="Coconut Mall") {category = "Slower-Glitch";}
-  } 
-
-  else if (ghostIndex<mainLB["leaderboards"].length-1 && mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex+1}`]["name"]) {
-
-    category = 'No-Glitch';
-    if (isSlowGlitch(mainLB["leaderboards"][`${ghostIndex+1}`]["fastestTimeSimple"],mainLB["leaderboards"][`${ghostIndex}`]["fastestTimeSimple"])) {category = "Normal";}
-
-    if (ghostIndex<mainLB["leaderboards"].length-2) {
-      if (mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex+2}`]["name"] || 
-        shortcutCategories.includes(mainLB["leaderboards"][ghostIndexStr]["name"])) {category = "Shortcut";}
+    if (glitchCategoryIDs.includes(mainLB["leaderboards"][ghostIndexStr]["categoryId"])) {
+      return localTrackNameTimeComparator("Glitch",mainLB,ghostIndex,-1); //Glitch is returned if faster than No-Shortcut category
     }
 
-    try {//used for original Mr.Bean tracks and would work for 150cc Nintendo's
-      if (mainLB["leaderboards"][ghostIndexStr]["categoryId"]===16) {category = "Shortcut";}
+    if (mainLB["leaderboards"][ghostIndexStr]["categoryId"] === 16) {
+      return localTrackNameTimeComparator("Shortcut",mainLB,ghostIndex,2); //Shortcut is returned if faster than No-Shortcut category
     }
-    catch(err) {console.log("Error handled: categoryId not present");}
 
-    if (slowCategories.includes(mainLB["leaderboards"][ghostIndexStr]["name"])) {category = "Slower-Glitch";}
+    if (mainLB["leaderboards"][ghostIndexStr]["categoryId"] === 4) {
+      //This categoryId is misused for both shortcut times and normal times
+      //Most edge cases need to be accounted for here
 
-    if (mainLB["leaderboards"][ghostIndexStr]["name"]==="Six King Labyrinth" && mainLB["leaderboards"][ghostIndexStr]["200cc"]) {category = "Slower-Glitch";}
+      if (mainLB["leaderboards"][ghostIndexStr]["name"]==="Six King Labyrinth") {return "Slower-Glitch";}
+
+      if (ghostIndex<mainLB["leaderboards"].length-2 && mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex+2}`]["name"]) {
+        return localTrackNameTimeComparator("Shortcut",mainLB,ghostIndex,2);
+      }
+
+      try { 
+        if (mainLB["leaderboards"][ghostIndexStr]["name"] === mainLB["leaderboards"][`${ghostIndex+1}`]["name"] 
+                      && noShortcutCategoryIDs.includes(mainLB["leaderboards"][`${ghostIndex+1}`]["categoryId"])) {
+          if (isSlowGlitch(mainLB["leaderboards"][ghostIndexStr]["fastestTimeSimple"],mainLB["leaderboards"][`${ghostIndex+1}`]["fastestTimeSimple"])) {return "Slower-Glitch";}
+          else {return "Shortcut";}
+        }
+      }
+      catch{console.log("Out of Bounds");}
+      return "Normal";
+    }
+
+    return "None"; //should never trigger, all current categoryIds are accounted for
   }
-  else {category = 'Normal';}
-  return category;
+  else {return "Normal";}
 }
 
 /*****************************************************************************/
