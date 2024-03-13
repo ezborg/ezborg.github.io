@@ -69,7 +69,7 @@ function loadLeaderboard(load,currentPage) {
     category = determineCategory(mainLB,i,`${i}`);
     trackIds.push(mainLB["leaderboards"][`${i}`]["trackId"]);
 
-    if (category==="Slower-Glitch") { //prevent slow glitches and slow shortcuts from displaying
+    if (category==="Slower-Glitch") { //prevent slow glitches and slow shortcuts from displaying by not adding them to the fetch array
       //console.log(mainLB["leaderboards"][`${i}`]["name"] + "Slow glitch");
       continue;
     }
@@ -86,7 +86,7 @@ function loadLeaderboard(load,currentPage) {
       let infoTitle = document.getElementById('main').getElementsByTagName('thead')[0];
       createTableHeader11(infoTitle.insertRow(),"Track Name","Category","Time","Player Name","Mii","Nation","Character","Vehicle","Controller","Date","Duration");
       let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
-      //create header row and init body row
+      //create header row and initiate first body row
 
       let screenName = '', allDates = [], allYears = [], allRecords = [],
       vehicleTally = [], characterTally = [], controllerTally = [], playerTally = [], 
@@ -145,8 +145,7 @@ function loadLeaderboard(load,currentPage) {
         }
 
         if (player[0]!="Unknown") {
-          //prevent unknown players from being added to player and nation table, ghost stats are still added
-          //will still be displayed for overall record table
+          //prevent unknown players from being added to player and nation stats table, ghost stats and main record table are still added
           if (toBeAdded = addToArray(player[0],playerTally)) {
             playerTally.push(new NameQuantityNode(player[0],1,player[1]))
           }
@@ -169,7 +168,6 @@ function loadLeaderboard(load,currentPage) {
         allDates.push(recordDate);
         allRecords.push(results[index]["value"]["fastestTimeSimple"]);
         orderedDuration.push(new NameQuantityNode(results[index]["value"]["name"]+": "+categories[j],duration,recordDate,player[0]));
-        //these two are always pushed to
 
         if (toBeAdded = addToArray(recordDate.slice(0,4),allYears)) {
           allYears.push(new NameQuantityNode(recordDate.slice(0,4),1))
@@ -205,7 +203,7 @@ function loadLeaderboard(load,currentPage) {
 
       //Begin Stats Section
 
-      orderedDuration.sort(sortNodeByQuantity);countryTally.sort(sortNodeByQuantity); 
+      orderedDuration.sort(sortNodeByQuantity); countryTally.sort(sortNodeByQuantity); 
       vehicleTally.sort(sortNodeByQuantity); characterTally.sort(sortNodeByQuantity);
       controllerTally.sort(sortNodeByQuantity); playerTally.sort(sortNodeByQuantity); 
       glitchTally.sort(sortNodeByQuantity); noGlitchTally.sort(sortNodeByQuantity);
@@ -311,9 +309,7 @@ function PlayersPageAndPIDbyPlayerName() {
 /*                              Top10 Main Func                              */
 /*****************************************************************************/
 
-/*
-Searches once and then searches again, fetching a lot of data so at least one fetch fails typically
-*/
+//Searches once and then searches again, fetching this much data usually results in at least one fetch failing the first time
 function topsByPID() {
   let playerID = document.getElementById("playerID"),
   timesheet = document.getElementById("Timesheet?"),
@@ -379,10 +375,10 @@ function topsByPID() {
         for (let j=0;j<results.length;j++) {
           let rNum = [], index = `${j}`;
 
-          //add failed fetches to array to try again
+          //add failed fetches to array for retry
           if (results[index]["status"] === "rejected") {
             let failedTrack = trackIds.indexOf(urlList[index].slice(41,81)); //find track id from url and use it to find index of correlated track in master json
-            console.log(mainLB["leaderboards"][`${failedTrack}`]["name"]+" failed to fetch"); //master json always exists or it will have failed already
+            console.log(mainLB["leaderboards"][`${failedTrack}`]["name"]+" failed to fetch");
             retryfetches.push(urlList[index]);
             categories2.push(categories[j]);
             continue;
@@ -1272,7 +1268,7 @@ function isSlowGlitch(current_glitch,not_glitch) {
  * @param {string} category 
  * @param {json} mainLB 
  * @param {number} ghostIndex 
- * @param {number} offset either -1 for glitchs or 2 for shortcuts
+ * @param {number} offset either -1 for glitches or 2 for shortcuts
  * @returns category string */
 function localTrackNameTimeComparator(category,mainLB,ghostIndex,offset) {
   if (ghostIndex<mainLB["leaderboards"].length-1) {
@@ -1292,7 +1288,7 @@ function localTrackNameTimeComparator(category,mainLB,ghostIndex,offset) {
 
 const noShortcutCategoryIDs = [0,2,6];
 const glitchCategoryIDs = [1,5];
-const shortcutCategoryIDs = [4,16]; //unused current as 4 is unrealible
+const shortcutCategoryIDs = [4,16]; //unused currently as 4 is unrelible
 //0,1,2,16 are 150cc
 //4,5,6 are 200cc
 
@@ -1305,7 +1301,7 @@ function determineCategory(mainLB,ghostIndex,ghostIndexStr) {
   if (mainLB["leaderboards"][ghostIndexStr].hasOwnProperty("categoryId")) {
     
     if (noShortcutCategoryIDs.includes(mainLB["leaderboards"][ghostIndexStr]["categoryId"])) {
-      if (mainLB["leaderboards"][ghostIndexStr]["name"]==="Coconut Mall") {return "Slower-Glitch";}
+      if (mainLB["leaderboards"][ghostIndexStr]["name"]==="Coconut Mall") {return "Slower-Glitch";} //edge case due to bugged leaderboard
       return "No-Shortcut";
     } //No time check is neccessary on No-Shortcut categories
 
@@ -1318,10 +1314,6 @@ function determineCategory(mainLB,ghostIndex,ghostIndexStr) {
     }
 
     if (mainLB["leaderboards"][ghostIndexStr]["categoryId"] === 4) {
-      //This categoryId is misused for both shortcut times and normal times
-      //Most edge cases need to be accounted for here
-
-      if (mainLB["leaderboards"][ghostIndexStr]["name"]==="Six King Labyrinth") {return "Slower-Glitch";}
 
       if (ghostIndex<mainLB["leaderboards"].length-2 && mainLB["leaderboards"][ghostIndexStr]["name"]===mainLB["leaderboards"][`${ghostIndex+2}`]["name"]) {
         return localTrackNameTimeComparator("Shortcut",mainLB,ghostIndex,2);
