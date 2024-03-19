@@ -54,12 +54,10 @@ thead {
 
 h1 {
     color: var(--primary-color);
-    text-align: center;
 }
 
 h2 {
     color: var(--secondary-color);
-    text-align: center;
 }
 
 body {

@@ -3,9 +3,8 @@
 /*****************************************************************************/
 
 const baseURL = "https://tt.chadsoft.co.uk",  //must use https://
-largeCategories = ["GCN Baby Park","Jungle Jamble","Undiscovered Offlimit","Wetland Woods","Sunset Forest","White Garden","Mushroom Island",
-                  "Colour Circuit","GCN Mushroom Bridge","Fishdom Island","Kinoko Cave","Summer Starville","Spectral Station","Obstagoon's Palace",
-                  "Camp Kartigan","Castle of Darkness","Haunted Gardens","Castle of Time"];
+largeCategories = ["Jungle Jamble","Undiscovered Offlimit","White Garden","Wetland Woods","Sunset Forest","Spectral Station","Obstagoon's Palace",
+                  "Mushroom Island","GCN Mushroom Bridge","Fishdom Island","Colour Circuit","Castle of Time","Castle of Darkness","Camp Kartigan"];
 //array to fetch more ghosts for top 10 LBs, category is large if top 10 ghosts are not within first 100 entries
 //must be manually inputed, it is logged in console during execution for easy knowledge
 
@@ -615,7 +614,7 @@ let headerInfo = {
     "index": 4
   },
   "playerlookup": {
-    "title": "Lookup your PlayerID",
+    "title": "Search for a PlayerID",
     "url": "playerlookup.html",
     "urlText": "Search for playerID",
     "index": 5
