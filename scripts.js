@@ -87,7 +87,7 @@ function loadLeaderboard(load,currentPage) {
       let myTable = document.getElementById("main").getElementsByTagName('tbody')[0];
       //create header row and initiate first body row
 
-      let screenName = '', allDates = [], allYears = [], allRecords = [],
+      let screenName = '', unknownPeople = 0, allDates = [], allYears = [], allRecords = [],
       vehicleTally = [], characterTally = [], controllerTally = [], playerTally = [], 
       glitchTally = [], noGlitchTally = [], countryTally = [], orderedDuration = [];
       //declare arrays
@@ -161,6 +161,7 @@ function loadLeaderboard(load,currentPage) {
         }
         else {
           console.log("Missing player entry at: "+results[index]["value"]["name"]+": "+categories[j]);
+          unknownPeople++; //used for percentage of players controller calculations
           screenName = checkDefaultMii(results[index]["value"]["ghosts"]["0"]["player"]);
         }
 
@@ -178,11 +179,14 @@ function loadLeaderboard(load,currentPage) {
           characterTally.push(new NameQuantityNode(currentCharacter,1))
         }
 
-        if (currentController==="Gamecube" && results[index]["value"]["ghosts"]["0"]["usbGcnAdapterAttached"]) {
-          currentController="USB-GCN"; //intercept USB-GCN before addToArray
-        }
         if (toBeAdded = addToArray(currentController,controllerTally)) {
           controllerTally.push(new NameQuantityNode(currentController,1))
+        }
+        if (toBeAdded = addToArray(player[0],getControllerArray(currentController))) {
+          getControllerArray(currentController).push(new NameQuantityNode(player[0],1))
+        }
+        if (currentController==="Gamecube" && results[index]["value"]["ghosts"]["0"]["usbGcnAdapterAttached"]) {
+          currentController="USB Gamecube"; //switch to USB-GCN after stats collection
         }
         //add ghost data to arrays
 
@@ -207,8 +211,12 @@ function loadLeaderboard(load,currentPage) {
       controllerTally.sort(sortNodeByQuantity); playerTally.sort(sortNodeByQuantity); 
       glitchTally.sort(sortNodeByQuantity); noGlitchTally.sort(sortNodeByQuantity);
       allYears.sort(sortNodeByName);
+      //wheelPlayers.sort(sortNodeByQuantity); gamecubePlayers.sort(sortNodeByQuantity);
+      //classicPlayers.sort(sortNodeByQuantity); nunchukPlayers.sort(sortNodeByQuantity);
       //numeric sorting
 
+      document.getElementById("totalPlayerCount").textContent=`Individual Record Holders: ${playerTally.length+unknownPeople}`;
+      document.getElementById("totalPlayerCountDupe").textContent=`Total Record Holders: ${playerTally.length+unknownPeople}`;
       document.getElementById("totalTime").textContent=`Overall Combined Time: ${addGhostTimes(allRecords)}`;
       document.getElementById("totalCount").textContent=`Total Records: ${allDates.length}`;
 
@@ -216,15 +224,15 @@ function loadLeaderboard(load,currentPage) {
       displayPie("character",characterTally);
       displayPie("controller",controllerTally);
       displayPie("country",countryTally); //Pie charts
-      
+
       displayTopTen(orderedDuration);
+      displayControllerTable("controllerList",controllerTally,"Controller","Total Records","% of Unique Players",playerTally.length+unknownPeople);
       displayTableWithPictures("playerList",playerTally,"Player Name","Total Records","Nation");
       displayTableWithPictures("glitchList",glitchTally,"Player Name","Total Records","Nation");
       displayTableWithPictures("noGlitchList",noGlitchTally,"Player Name","Total Records","Nation");
       displayTableWithPictures("countryList",countryTally,"Country","Total Records","Flag");
       displaySimpleTable("vehicleList",vehicleTally,"Vehicle","Total");
       displaySimpleTable("characterList",characterTally,"Character","Total");
-      displaySimpleTable("controllerList",controllerTally,"Controller","Total"); //html tables
 
       let yearSplit = splitNameQuantity(allYears);
       displayBar("years",yearSplit[0],yearSplit[1]); //bar charts
@@ -637,6 +645,11 @@ function buildRecordWebpage() {
   document.body.appendChild(createHeaderTwo(tableInfo["top"]["header"]));
   document.body.appendChild(createTable("top"));
 
+  let totalPlayerCount = document.createElement("h2");
+  totalPlayerCount.id = "totalPlayerCount";
+  totalPlayerCount.appendChild(document.createTextNode("X"));
+  document.body.appendChild(totalPlayerCount);
+
   playerDiv = document.createElement("div");
   playerDiv.className = "triple-grid";
   playerDiv.appendChild(createTableHeaderDiv("noGlitch"));
@@ -648,7 +661,17 @@ function buildRecordWebpage() {
   mainDiv.className = "grid-container";
   mainDiv.appendChild(createTableChartDiv("vehicle"));
   mainDiv.appendChild(createTableChartDiv("character"));
-  mainDiv.appendChild(createTableChartDiv("controller"));
+  controllerDiv = document.createElement("div");
+  controllerDiv.appendChild(createHeaderTwo(tableInfo["controller"]["header"]));
+  let controllerWarning = document.createElement("p");
+  controllerWarning.appendChild(document.createTextNode("Player Percentage may add up to over 100% if a player has records with multiple controllers."));
+  controllerDiv.appendChild(controllerWarning);
+  let subdiv = document.createElement("div");
+  subdiv.className = "inner-grid";
+  subdiv.appendChild(createChart("controller"));
+  subdiv.appendChild(createTable("controller"));
+  controllerDiv.appendChild(subdiv);
+  mainDiv.appendChild(controllerDiv);
   mainDiv.appendChild(createTableChartDiv("country"));
   document.body.appendChild(mainDiv);
 
@@ -658,6 +681,10 @@ function buildRecordWebpage() {
   yearsDiv.appendChild(createChart("years"));
   chronoDiv.appendChild(yearsDiv);
   headerDiv = document.createElement("div");
+  let totalPlayerCountDupe = document.createElement("h2");
+  totalPlayerCountDupe.id = "totalPlayerCountDupe";
+  totalPlayerCountDupe.appendChild(document.createTextNode("X"));
+  headerDiv.appendChild(totalPlayerCountDupe);
   let totalCount = document.createElement("h2");
   totalCount.id = "totalCount";
   totalCount.appendChild(document.createTextNode("Ghost table is building"));
@@ -1105,6 +1132,42 @@ function displayBar(tableIndex,dataset,x) {
   chart.render();
 }
 
+/** Populate Controller Table With Name Quantity and Percentage of Players
+ * @param {string} tableName controllerList
+ * @param {Array} dataset controllerTally
+ * @param {string} title1 Controller
+ * @param {string} title2 Total Records
+ * @param {string} title3 % of Unique Players
+ * @param {Number} totalPlayers playerTally.length */
+function displayControllerTable(tableName,dataset,title1,title2,title3,totalPlayers) {
+  let infoTitle = document.getElementById(tableName).getElementsByTagName('thead')[0];
+  let titleRow = infoTitle.insertRow();
+  let cellt1 = titleRow.insertCell(0),
+  cellt2 = titleRow.insertCell(1),
+  cellt3 = titleRow.insertCell(2);
+  cellt1.innerHTML=title1;
+  cellt2.innerHTML=title2;
+  cellt3.innerHTML=title3;
+  let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
+  let playerIndex = 0; originalLength = dataset.length;
+
+  for (let l=0;l<originalLength;l++) {
+    let dataRow = infoList.insertRow();
+    let cell1 = dataRow.insertCell(0), cell2 = dataRow.insertCell(1), cell3 = dataRow.insertCell(2);
+    if (dataset.length===1) {
+      playerIndex = 0;
+    }
+    else if (dataset[playerIndex].getQuantity()==dataset[playerIndex+1].getQuantity()) {
+      playerIndex = findLowestAlphabetical(dataset,playerIndex,playerIndex); //alphabetically sorting
+    }
+    cell1.innerHTML = dataset[playerIndex].getName();
+    cell2.innerHTML = dataset[playerIndex].getQuantity();
+    cell3.innerHTML = (((getControllerArray(dataset[playerIndex].getName()).length)/totalPlayers) * 100).toFixed(1); //controller Total/player total times 100, round to 1 decimal point
+    dataset.splice(playerIndex,1); //remove displayed table element
+    playerIndex = 0;
+  }
+}
+
 /** used for vehicle/character/controller tables, 
  * passed array must be sorted numerically
  * @param {string} tableName 
@@ -1139,6 +1202,7 @@ function displaySimpleTable(tableName,dataset,title1,title2) {
 
 /** used for nation and player tables, 3 elements, 
  * passed array must be sorted numerically
+ * Gold, Silver, and Bronze will be given out to top 3 accordingly 
  * @param {string} tableName 
  * @param {Array} dataset NameQuantityNode Array
  * @param {string} title1 order matters
@@ -1154,16 +1218,28 @@ function displayTableWithPictures(tableName,dataset,title1,title2,title3) {
   cellt2.innerHTML=title2;
   cellt3.innerHTML=title3;
   let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
-  let playerIndex = 0; originalLength = dataset.length;
+  let playerIndex = 0; originalLength = dataset.length, previousEquals = false, currentRank = 0;
 
   for (let l=0;l<originalLength;l++) {
     let dataRow = infoList.insertRow();
+    if (l<3) {
+      dataRow.style.color = getRankColor(currentRank);
+    }
+    else if (previousEquals && currentRank<3) {
+      dataRow.style.color = getRankColor(currentRank);
+      previousEquals = false;
+    }
+
     let cell1 = dataRow.insertCell(0), cell2 = dataRow.insertCell(1), cell3 = dataRow.insertCell(2);
     if (dataset.length===1) {
       playerIndex = 0;
     }
     else if (dataset[playerIndex].getQuantity()==dataset[playerIndex+1].getQuantity()) {
       playerIndex = findLowestAlphabetical(dataset,playerIndex,playerIndex); //alphabetically sorting
+      previousEquals = true;
+    }
+    else {
+      currentRank = l+1;
     }
     cell1.innerHTML = dataset[playerIndex].getName();
     cell2.innerHTML = dataset[playerIndex].getQuantity();
@@ -1192,6 +1268,9 @@ function displayTopTen(dataset) {
   let infoList = document.getElementById('longList').getElementsByTagName('tbody')[0];
   for (let q=0;q<10;q++) {
     let infoRow = infoList.insertRow();
+    if (q<3) {
+      infoRow.style.color = getRankColor(q);
+    }
     let cell1 = infoRow.insertCell(0),
     cell2 = infoRow.insertCell(1),
     cell3 = infoRow.insertCell(2),
@@ -1366,9 +1445,21 @@ addEventListener("DOMContentLoaded", () => {
   }
 })
 
+let wheelPlayers = [], nunchukPlayers = [], classicPlayers = [], gamecubePlayers = [], usbgamecubePlayers = [];
+
 /*****************************************************************************/
 /*                          Switch Case Statments                            */
 /*****************************************************************************/
+
+/** converts a rank to a color string
+ * @param {Number} x 
+ * @returns controller string */
+function getRankColor(x) {
+  switch (x) {
+      case 0: return "GoldenRod";
+      case 1: return "LightSteelBlue";
+      case 2: return "OrangeRed";
+}}
 
 /** converts controller (int) to a controller name
  * @param {Number} x 
@@ -1380,6 +1471,18 @@ function getController(x) {
       case 2: return "Classic";
       case 3: return "Gamecube";
       default: return "Unknown";
+}}
+
+/** uses controller name to find respective controllerplayer array
+ * @param {Number} x 
+ * @returns controller string */
+function getControllerArray(x) {
+  switch (x) {
+    case "Wii Wheel": return wheelPlayers;
+    case "Nunchuk": return nunchukPlayers;
+    case "Classic": return classicPlayers;
+    case "Gamecube": return gamecubePlayers;
+    case "USB Gamecube": return usbgamecubePlayers;
 }}
 
 /** converts vehicleId (int) to a vehicle name; karts 0-17; bikes 18-35
