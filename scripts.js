@@ -1098,14 +1098,16 @@ function displayBar(tableIndex,dataset,x) {
   let options = {
     chart: {
       height: 350,
+      toolbar: {show: false},
       type: 'bar',
       width: 500
     },
     fill: {opacity: 1},
     series: [{
-      name: `Current Records set in this ${tableInfo[tableIndex]["tooltip"]}`,
+      //name: `Current Records set in this ${tableInfo[tableIndex]["tooltip"]}`,
       data: dataset
     }],
+    tooltip: {enabled: false},
     xaxis: {
       categories: x,
       labels: {
