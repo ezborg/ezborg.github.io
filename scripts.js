@@ -92,6 +92,7 @@ function loadLeaderboard(load,currentPage) {
       glitchTally = [], noGlitchTally = [], countryTally = [], orderedDuration = [];
       //declare arrays
 
+      console.log(results);
       for (let j=0;j<results.length;j++) {
 
         let index = `${j}`;
@@ -217,8 +218,8 @@ function loadLeaderboard(load,currentPage) {
 
       document.getElementById("totalPlayerCount").textContent=`Individual Record Holders: ${playerTally.length+unknownPeople}`;
       document.getElementById("totalPlayerCountDupe").textContent=`Total Record Holders: ${playerTally.length+unknownPeople}`;
-      document.getElementById("totalTime").textContent=`Overall Combined Time: ${addGhostTimes(allRecords)}`;
-      document.getElementById("totalCount").textContent=`Total Records: ${allDates.length}`;
+      document.getElementById("totalTime").textContent=`Overall Combined Time: ${addGhostTimes(allRecords)}`; //$.*.value.ghosts.[0].finishTimeSimple
+      document.getElementById("totalCount").textContent=`Total Records: ${allDates.length}`; 
 
       displayPie("vehicle",vehicleTally);
       displayPie("character",characterTally);
