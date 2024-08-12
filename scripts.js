@@ -92,7 +92,7 @@ function loadLeaderboard(load,currentPage) {
       glitchTally = [], noGlitchTally = [], countryTally = [], orderedDuration = [];
       //declare arrays
 
-      console.log(results);
+      //console.log(results);
       for (let j=0;j<results.length;j++) {
 
         let index = `${j}`;
@@ -227,7 +227,7 @@ function loadLeaderboard(load,currentPage) {
       displayPie("country",countryTally); //Pie charts
 
       displayTopTen(orderedDuration);
-      displayControllerTable("controllerList",controllerTally,"Controller","Total Records","% of Unique Players",playerTally.length+unknownPeople);
+      displayControllerTable("controllerList",controllerTally,"Controller","Total Records","% of Records","% of Unique Players",playerTally.length+unknownPeople,allDates.length);
       displayTableWithPictures("playerList",playerTally,"Player Name","Total Records","Nation");
       displayTableWithPictures("glitchList",glitchTally,"Player Name","Total Records","Nation");
       displayTableWithPictures("noGlitchList",noGlitchTally,"Player Name","Total Records","Nation");
@@ -665,7 +665,7 @@ function buildRecordWebpage() {
   controllerDiv = document.createElement("div");
   controllerDiv.appendChild(createHeaderTwo(tableInfo["controller"]["header"]));
   let controllerWarning = document.createElement("p");
-  controllerWarning.appendChild(document.createTextNode("Player Percentage may add up to over 100% if a player has records with multiple controllers."));
+  controllerWarning.appendChild(document.createTextNode("Player Percentage column will total more than 100% when a player has multiple records with different controllers."));
   controllerDiv.appendChild(controllerWarning);
   let subdiv = document.createElement("div");
   subdiv.className = "inner-grid";
@@ -1142,21 +1142,21 @@ function displayBar(tableIndex,dataset,x) {
  * @param {string} title2 Total Records
  * @param {string} title3 % of Unique Players
  * @param {Number} totalPlayers playerTally.length */
-function displayControllerTable(tableName,dataset,title1,title2,title3,totalPlayers) {
+function displayControllerTable(tableName,dataset,title1,title2,title3,title4,totalPlayers,totalRecords) {
   let infoTitle = document.getElementById(tableName).getElementsByTagName('thead')[0];
   let titleRow = infoTitle.insertRow();
-  let cellt1 = titleRow.insertCell(0),
-  cellt2 = titleRow.insertCell(1),
-  cellt3 = titleRow.insertCell(2);
+  let cellt1 = titleRow.insertCell(0), cellt2 = titleRow.insertCell(1), cellt3 = titleRow.insertCell(2), cellt4 = titleRow.insertCell(3);
   cellt1.innerHTML=title1;
   cellt2.innerHTML=title2;
   cellt3.innerHTML=title3;
+  cellt4.innerHTML=title4;
   let infoList = document.getElementById(tableName).getElementsByTagName('tbody')[0];
   let playerIndex = 0; originalLength = dataset.length;
+  let multiControllerPlayers = 0;
 
   for (let l=0;l<originalLength;l++) {
     let dataRow = infoList.insertRow();
-    let cell1 = dataRow.insertCell(0), cell2 = dataRow.insertCell(1), cell3 = dataRow.insertCell(2);
+    let cell1 = dataRow.insertCell(0), cell2 = dataRow.insertCell(1), cell3 = dataRow.insertCell(2), cell4 = dataRow.insertCell(3);
     if (dataset.length===1) {
       playerIndex = 0;
     }
@@ -1165,10 +1165,17 @@ function displayControllerTable(tableName,dataset,title1,title2,title3,totalPlay
     }
     cell1.innerHTML = dataset[playerIndex].getName();
     cell2.innerHTML = dataset[playerIndex].getQuantity();
-    cell3.innerHTML = (((getControllerArray(dataset[playerIndex].getName()).length)/totalPlayers) * 100).toFixed(1); //controller Total/player total times 100, round to 1 decimal point
+    cell3.innerHTML = ((dataset[playerIndex].getQuantity()/totalRecords) * 100).toFixed(1);
+    cell4.innerHTML = (((getControllerArray(dataset[playerIndex].getName()).length)/totalPlayers) * 100).toFixed(1); //controller Total/player total times 100, round to 1 decimal point
+    multiControllerPlayers+=getControllerArray(dataset[playerIndex].getName()).length;
     dataset.splice(playerIndex,1); //remove displayed table element
     playerIndex = 0;
   }
+  
+  let dataRow = infoList.insertRow();
+  let finalCell = dataRow.insertCell(0);
+  finalCell.innerHTML = `Number of players who have records with multiple controllers: ${multiControllerPlayers-totalPlayers}`;
+  finalCell.colSpan = 4;
 }
 
 /** used for vehicle/character/controller tables, 
