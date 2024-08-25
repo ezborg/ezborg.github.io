@@ -323,6 +323,7 @@ function topsByPID() {
   timesheet = document.getElementById("Timesheet?"),
   urlList = [], allPersonalRecords = [], retryfetches = [], failedFetches = [],
   trackIds = [], categories = [], categories2 = [], csvList = [];
+  localStorage.playerId=playerID.value;
 
   //check if a leaderboard is built and remove it
   const element = document.getElementById("main");
